@@ -65,10 +65,6 @@ function Get-ThreeEntries2020 {
   }
 }
 
-#
-# Main
-#
-
 # Read the expense report, convert lines to int and sort everything
 # Assume all entries are unique
 $entries = Get-Content $ExpenseReport | ForEach-Object { [int] $_ } | Sort-Object

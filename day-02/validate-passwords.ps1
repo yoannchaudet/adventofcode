@@ -60,10 +60,6 @@ function Test-PasswordPart2 {
   $firstPosition -xor $secondPosition
 }
 
-#
-# Main
-#
-
 # Read/parse the passwords (and their associated policy)
 $passwords = @(Get-Content $Database | ForEach-Object {
   if ($_ -match "([0-9]+)\-([0-9]+) ([a-z0-9])\: ([a-z0-9]+)") {
