@@ -46,10 +46,6 @@ function Get-TwoEntries2020 {
 function Get-ThreeEntries2020 {
   param ([int[]]$Entries)
 
-  # Assume there is at least 3 entries available
-  $min = $Entries[0]
-  $max = $Entries[-1]
-
   # a + b + c = 2020
   # go through the list (fix a), fix b (with b < 2020 - a), deduct c and check if in the list
   foreach ($a in $entries) {
@@ -77,6 +73,7 @@ function Get-ThreeEntries2020 {
 # Assume all entries are unique
 $entries = Get-Content $ExpenseReport | ForEach-Object { [int] $_ } | Sort-Object
 
+# Find either 2 or 3 entries adding up to 2020
 $result = $Part2 ? (Get-ThreeEntries2020 $entries) : (Get-TwoEntries2020 $entries)
 if ($result) {
   $result | Format-Table
