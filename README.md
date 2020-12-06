@@ -27,3 +27,12 @@ Same thing:
 # Part 2
 ./day-02/validate-passwords.ps1 ./day-02/input.txt -Part2
 ```
+
+## Day-03
+
+Again:
+
+``` ps
+# Part 1
+./day-03/how-many-trees.ps1 ./day-03/input.txt
+```
