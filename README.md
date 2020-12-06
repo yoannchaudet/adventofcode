@@ -2,7 +2,7 @@
 
 I like puzzle and I am probably very rusty 🧠.
 
-Trying the 2020 https://adventofcode.com.
+Trying the 2020 [Advent of Code](https://adventofcode.com/2020).
 
 - [Day-01](#day-01)
 - [Day-02](#day-02)
