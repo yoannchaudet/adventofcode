@@ -3,7 +3,7 @@
 
 <#
 .SYNOPSIS
-Find the invalid passwords in a given database.
+Find the valid passwords in a given database.
 
 .PARAMETER Database
 Path to the database.
