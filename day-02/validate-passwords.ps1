@@ -9,7 +9,8 @@ Find the valid passwords in a given database.
 Path to the database.
 
 .PARAMETER Part2
-Part two: ?#>
+Part two: use the new password policy.
+#>
 
 param (
   [Parameter(Mandatory=$true)]
