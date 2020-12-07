@@ -3,7 +3,7 @@
 
 <#
 .SYNOPSIS
-Boarding pass magic.
+Boarding pass arithmetic.
 
 .DESCRIPTION
 The 7 first characters of the boarding pass are just regular binary with F = 0 and B = 1.
@@ -20,7 +20,7 @@ The last 3 characters are binary too with L = 0 and R = 1.
 Path to the list of boarding passes.
 
 .PARAMETER Part2
-Part two: ?
+Part two switch.
 #>
 
 param (
