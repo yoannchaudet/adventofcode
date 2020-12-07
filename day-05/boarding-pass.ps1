@@ -70,5 +70,30 @@ $seats = @(Get-Seats)
 $seats | Format-Table
 
 # Find the seat with the maximum seat ID
-$maxSeatID = ($seats | Measure-Object -Property ID -Maximum).Maximum
-Write-Host "Maximum seat ID = $maxSeatID"
+if (-Not $Part2) {
+  $maxSeatID = ($seats | Measure-Object -Property ID -Maximum).Maximum
+  Write-Host "Maximum seat ID = $maxSeatID"
+}
+
+# Find my seat
+else {
+  # We know our seat is not at the beginning or end
+  # Seat +1 and -1 exists
+  # Flight is full
+
+  # Get all seats ids, sorted (asc)
+  $seatIds = @($seats.ID | Sort-Object)
+
+  # There should be at least 3 seats in there
+  if ($seatIds.Count -lt 3) {
+    throw "Not enough seats"
+  }
+
+  # Find the seat
+  for ($i = 1; $i -lt $seatIds.Count - 1; $i++) {
+    if ($seatIds[$i] -ne $seatIds[$i - 1] + 1) {
+      Write-Host "My seat ID = $($seatIds[$i] - 1)"
+      break
+    }
+  }
+}
