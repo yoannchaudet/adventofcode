@@ -7,6 +7,7 @@ Trying the 2020 [Advent of Code](https://adventofcode.com/2020).
 - [Day-01](#day-01)
 - [Day-02](#day-02)
 - [Day-03](#day-03)
+- [Day-04](#day-04)
 
 ## Day-01
 
@@ -39,4 +40,14 @@ Starting with PowerShell 7.1+:
 
 # Part 2
 ./day-03/how-many-trees.ps1 ./day-03/input.txt -Part2
+```
+
+## Day-04
+
+``` ps
+# Part 1
+./day-04/count-passports.ps1 ./day-04/input.txt
+
+# Part 2
+./day-04/count-passports.ps1 ./day-04/input.txt -Part2
 ```
