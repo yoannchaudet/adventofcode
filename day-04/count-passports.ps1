@@ -213,5 +213,3 @@ Write-Host @"
       passports: $($passports.Count)
 valid passports: $($validPassports.Count)
 "@
-
-# 125 too high
