@@ -9,6 +9,7 @@ Trying the 2020 [Advent of Code](https://adventofcode.com/2020).
 - [Day-03](#day-03)
 - [Day-04](#day-04)
 - [Day-05](#day-05)
+- [Day-06](#day-06)
 
 ## Day-01
 
@@ -61,4 +62,14 @@ Starting with PowerShell 7.1+:
 
 # Part 2
 ./day-05/boarding-pass.ps1 ./day-05/input.txt -Part2
+```
+
+## Day-06
+
+``` ps
+# Part 1
+./day-06/custom-forms.ps1 ./day-06/input.txt
+
+# Part 2
+./day-06/custom-forms.ps1 ./day-06/input.txt -Part2
 ```

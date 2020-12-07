@@ -34,6 +34,7 @@ function Get-Groups {
 
   # Initalize a group
   $group = ""
+  $groupSize = 0
 
   # Get all lines and iterate (add a blank line)
   @(Get-Content $Answers) + '' | ForEach-Object {
@@ -51,16 +52,22 @@ function Get-Groups {
       }
       [PSCustomObject] @{
         Answers           = $groupAnswers
-        DistinctQuestions = @($groupAnswers.Keys).Count
+        GroupSize         = $groupSize
+        # Number of questions anyone answered
+        AnyAnswered       = @($groupAnswers.Keys).Count
+        # Number of questions everyone answered
+        AllAnswered       = @($groupAnswers.GetEnumerator() | Where-Object { $_.Value -eq $groupSize }).Count
       }
 
       # Reset the group
       $group = ""
+      $groupSize = 0
     }
 
     # Aggregate data in the group
     else {
       $group += $line.Trim()
+      $groupSize += 1
     }
   }
 }
@@ -69,6 +76,14 @@ function Get-Groups {
 $groups = Get-Groups
 $groups | Format-Table
 
-# Print the sum of all questions answered
-$sumAllQuestions = $($groups | Measure-Object -Property DistinctQuestions -Sum).Sum
-Write-Host "Sum of all questions answered = $sumAllQuestions"
+# Print the sum of all questions anyone answered
+if (-Not $Part2) {
+  $sumAnyAnswered = $($groups | Measure-Object -Property AnyAnswered -Sum).Sum
+  Write-Host "Sum of all questions anyone answered = $sumAnyAnswered"
+}
+
+# Print the sum of all questions everyone answered
+if ($Part2) {
+  $sumAllAnswered = $($groups | Measure-Object -Property AllAnswered -Sum).Sum
+  Write-Host "Sum of all questions everyone answered = $sumAllAnswered"
+}
