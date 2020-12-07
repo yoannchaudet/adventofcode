@@ -80,7 +80,7 @@ function Get-Rules {
 function Get-ColorsContainingColor {
   <#
   .SYNOPSIS
-  Recursively return the color of bags that can contain another given color.
+  Not recursively return the color of bags that can contain another given color.
   #>
 
   param (
@@ -106,6 +106,35 @@ function Get-ColorsContainingColor {
   $newColors
 }
 
+function Get-BagsCount {
+  <#
+  .SYNOPSIS
+  Recursively count how many bags are contained in a given colored bag.
+  #>
+
+  param (
+    [hashtable] $AllRules,
+    [string] $Color
+  )
+
+  # The bag contains no other bags
+  if (-Not $AllRules[$Color]) {
+    0
+  }
+
+  # The bag contains other bags
+  else {
+    # Recursively add up the content
+    $otherBagsCount = 0
+    @($AllRules[$Color]) | ForEach-Object {
+      $otherBagsCount += ($_.Count + $_.Count * (Get-BagsCount -AllRules $AllRules -Color $_.BagColor))
+    }
+
+    # Return the count
+    $otherBagsCount
+  }
+}
+
 # Get all rules
 $allRules = Get-Rules
 $allRules | Format-Table
@@ -115,4 +144,10 @@ if (-Not $Part2) {
   $colors = @(Get-ColorsContainingColor -AllRules $allRules -Color 'shiny gold')
   $colors | Format-List
   Write-Host "`nColored bags that may contain 'shiny gold' = $($colors.Count)"
+}
+
+# Count how many bags total we need for the privilege of carrying a shiny gold bag
+if ($Part2) {
+  $bagCount = Get-BagsCount -AllRules $allRules -Color 'shiny gold'
+  Write-Host "`nTotal number of bags required = $bagCount"
 }
