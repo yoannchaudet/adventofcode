@@ -97,13 +97,8 @@ function Invoke-Program {
     # Increment the instruction counter
     $instruction.Execution += 1
 
-    # Validate we are still within bounds
-    if ($instructionPointer -le 0 -or $instructionPointer -ge ($Instructions.Count + 1)) {
-      throw "Segmentation fault"
-    }
-
-    # Exit gracefully
-    if ($instructionPointer -eq $Instructions.Count) {
+    # Get out
+    if ($instructionPointer -le 0 -or $instructionPointer -ge $Instructions.Count) {
       break
     }
   }
@@ -112,39 +107,15 @@ function Invoke-Program {
   $accumulator
 }
 
-function Get-LowestInstruction {
-  <#
-  .SYNOPSIS
-  Find the first lowest instruction matching a given criteria. Return its index.
-  #>
-
-  param (
-    [PSCustomObject[]] $Instructions,
-    [scriptblock] $Condition
-  )
-
-  # Init the index
-  $index = $null
-
-  # Go through the instructions backward
-  for ($i = $Instructions.Count -1; $i -gt 1; $i--) {
-    if (& $Condition $instructions[$i]) {
-      $index = $instructions[$i].Index
-      break
-    }
-  }
-
-  # Return the index
-  $index
-}
-
 # Get the instructions
 $instructions = Get-Instructions
 
 # Execute the program and print the ending accumulator
 $accumulator = Invoke-Program $instructions
-Write-Host "Accumulator = $accumulator"
-$instructions | Format-Table
+if (-Not $Part2) {
+  $instructions | Format-Table
+  Write-Host "Accumulator = $accumulator"
+}
 
 # Try to fix the infinite loop
 if ($Part2) {
@@ -156,67 +127,32 @@ if ($Part2) {
   # 1. The lowest jump in the file is going backward and is the one we ran
   #    In this case, we replace it by a nop and are done
   #
-  # 2. Get all the nop that were executed and try to replace them by a jump
-  #    one by one
+  # 2. Brute-force?
   #
+  # Let's just do 2.
 
-  # Instructions execute sequentially (normally)
-  # - find the lowest jump going backward in the file
-  # - find the lowest jump going backward in the file that did not run
-  $lowestExecutedBackwardJump = Get-LowestInstruction $Instructions {
-    param ($I)
-    $I.Execution -gt 0 -and $I.Instruction -eq 'jmp' -and $I.Argument -lt 0
-  }
-  $lowestMissedExecutedBackwardJump = (Get-LowestInstruction $Instructions {
-    param ($I)
-    $I.Execution -eq 0 -and $I.Instruction -eq 'jmp' -and $I.Argument -lt 0
-  }) || 0
+  # Collect the list of instructions to swap
+  # Get them in index reverse order (heuristic, we probably should be swapping something toward the end of the file)
+  $instructionsToSwap = @($instructions `
+    | Where-Object { $_.Execution -ge 0 -and @('nop', 'jmp') -contains $_.Instruction } `
+    | Sort-Object -Property 'Index' -Descending `
+    | Select-Object -Property 'Index').Index
 
-  # Use strategy 1
-  if ($lowestExecutedBackwardJump -and $lowestExecutedBackwardJump -gt $lowestMissedExecutedBackwardJump) {
-    Write-Host "Using strategy 1"
-    Write-Host "Replacing instruction #$lowestExecutedBackwardJump by a nop"
+  # Do the swapping
+  foreach ($instructionToSwap in $instructionsToSwap) {
+    # Swap instruction
     $instructions = Get-Instructions
-    $instructions[$lowestExecutedBackwardJump].Instruction = 'nop'
+    $instructions[$instructionToSwap].Instruction = $instructions[$instructionToSwap].Instruction -eq 'nop' ? 'jmp' : 'nop'
+
+    # Run program
     $accumulator = Invoke-Program $instructions
-    if ($instructions[-1].Execution -eq 0) {
-      throw "Last instruction did not execute"
+    if ($instructions[-1].Execution -ne 0) {
+      Write-Host "Accumulator = $accumulator"
+      exit 0
     }
-    Write-Host "Accumulator = $accumulator"
   }
 
-  # We use strategy 2
-  else {
-    Write-Host "Using strategy 2"
-
-    # Find all nops that were executed
-    $nops = @($instructions | Where-Object { $_.Execution -ge 0 -and $_.Instruction -eq 'nop' } | Select-Object -Property 'Index')
-    foreach ($nop in $nops) {
-      Write-Host "Replacing instruction #$($nop.Index) by a jmp"
-      $instructions = Get-Instructions
-      $instructions[$nop.Index].Instruction = 'jmp'
-      $accumulator = Invoke-Program $instructions
-      if ($instructions[-1].Execution -ne 0) {
-        Write-Host "Accumulator = $accumulator"
-        break
-      }
-    }
-
-    # Find all jmps that were executed
-    $jmps = @($instructions | Where-Object { $_.Execution -ge 0 -and $_.Instruction -eq 'jmp' } | Select-Object -Property 'Index')
-    foreach ($jmp in $jmps) {
-      Write-Host "Replacing instruction #$($jmp.Index) by a nop"
-      $instructions = Get-Instructions
-      $instructions[$jmp.Index].Instruction = 'nop'
-      $accumulator = Invoke-Program $instructions
-      if ($instructions[-1].Execution -ne 0) {
-        Write-Host "Accumulator = $accumulator"
-        exit 0
-      }
-    }
-
-    throw "No solutions found"
-  }
+  Write-Host 'No solutions found'
 }
 
 # 1799 too high

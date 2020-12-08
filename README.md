@@ -91,4 +91,7 @@ Starting with PowerShell 7.1+:
 ``` ps
 # Part 1
 /day-08/boot-code.ps1 ./day-08/input.txt
+
+# Part 2
+/day-08/boot-code.ps1 ./day-08/input.txt -Part2
 ```
