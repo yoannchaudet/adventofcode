@@ -102,4 +102,7 @@ Starting with PowerShell 7.1+:
 ``` ps
 # Part 1
  ./day-09/xmas.ps1 ./day-09/input.txt -PreambleSize 25
+
+ # Part 2
+ ./day-09/xmas.ps1 ./day-09/input.txt -PreambleSize 25 -Part2
 ```

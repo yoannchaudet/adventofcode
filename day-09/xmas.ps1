@@ -88,7 +88,43 @@ function Get-FirstError {
   }
 }
 
+function Find-Set {
+  <#
+  .SYNOPSIS
+  Find a set of contiguous numbers in a given list that sums up to a given number.
+  #>
+
+  param (
+    [int64[]] $List,
+    [int64] $Sum
+  )
+
+  # Go through all valid positions for the beginning of the set
+  for ($setStartIndex = 0; $setStartIndex -lt $List.Length - 1; $setStartIndex++) {
+    $currentSum = 0
+    for ($i = $setStartIndex; $i -lt $List.Length; $i++) {
+      $currentSum += $List[$i]
+      if ($currentSum -eq $Sum) {
+        return $List[$setStartIndex..$i]
+      } elseif ($currentSum -gt $Sum) {
+        break
+      }
+    }
+  }
+}
+
 # Read the transmission
 $t = Get-Transmission
 $firstError = Get-FirstError $t
 Write-Host "First error = $firstError"
+
+# Execute part 2
+if ($Part2) {
+  $set = @(Find-Set -List ($t.Preamble + $t.Transmission) -Sum $firstError)
+  $minMax = $set | Measure-Object -Minimum -Maximum
+  Write-Host "Weak set = $set"
+  Write-Host "Minimum = $($minMax.Minimum)"
+  Write-Host "Maximum = $($minMax.Maximum)"
+  $weakness = $minMax.Minimum + $minMax.Maximum
+  Write-Host "Weakness = $weakness"
+}
