@@ -12,6 +12,7 @@ Trying the 2020 [Advent of Code](https://adventofcode.com/2020).
 - [Day-06](#day-06)
 - [Day-07](#day-07)
 - [Day-08](#day-08)
+- [Day-09](#day-09)
 
 ## Day-01
 
@@ -94,4 +95,11 @@ Starting with PowerShell 7.1+:
 
 # Part 2
 /day-08/boot-code.ps1 ./day-08/input.txt -Part2
+```
+
+## Day-09
+
+``` ps
+# Part 1
+ ./day-09/xmas.ps1 ./day-09/input.txt -PreambleSize 25
 ```
