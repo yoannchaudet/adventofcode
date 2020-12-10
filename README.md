@@ -13,6 +13,7 @@ Trying the 2020 [Advent of Code](https://adventofcode.com/2020).
 - [Day-07](#day-07)
 - [Day-08](#day-08)
 - [Day-09](#day-09)
+- [Day-10](#day-10)
 
 ## Day-01
 
@@ -105,4 +106,11 @@ Starting with PowerShell 7.1+:
 
  # Part 2
  ./day-09/xmas.ps1 ./day-09/input.txt -PreambleSize 25 -Part2
+```
+
+## Day-10
+
+``` ps
+# Part 1
+./day-10/jolt.ps1 ./day-10/input.txt
 ```
