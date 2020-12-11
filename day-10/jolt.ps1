@@ -58,50 +58,53 @@ function Get-Chain {
   }
 }
 
-function Get-DistinctChains {
+function Get-DistinctChains2 {
   <#
   .SYNOPSIS
-  Return the number of distinct chains.
+  Return the distinct number of chains given the longest chain.
   #>
 
-  param (
-    [int[]] $Ratings,
-    $LastRating = 0
-  )
-
-  # Count the number of branches we can do at this point in the tree
-  $nextSet = @($Ratings | Where-Object { $_ -gt $LastRating -and $_ -le ($LastRating + 3) })
-
-  # Output 1 (we have a complete chain)
-  if ($nextSet.Count -eq 0) {
-    1
-  }
-
-  # Recursively discover other branches
-  else {
-    $nextSet | ForEach-Object { Get-DistinctChains $Ratings $_ }
-  }
-}
-
-function Get-DistinctChains2 {
   param (
     [PSCustomObject[]] $Chain
   )
 
-  # Start at one
+  # Strategy: instead of trying to enumerate all solutions (that would take too long),
+  # we notice (while doodling on actual paper) that by looking at the longest chain that
+  # sections of adapters with a difference of 1, are creating branches in the tree.
+  # These branches repeat in a fibonacci sequence.
+  # For instance, if we have 0 (3), 1 (1), 2 (1), 3 (1), 6 (3):
+  # The tree would be:
+  #
+  # 0 - 1 - 2 - 3 - 6
+  #   - 2 - 3 - 6
+  #   - 3 - 6
+  #
+  # The tree is productin exactly, 1 (current branch) + fibonacci (number of consecutives 1 in the chain - 1).
+  # Here: 1 + f(2) = 1 + 2 + 1 = 3 (branches)
+  #
+  # On bigger trees, we observe that by multiplying the number of branches we obtain for each
+  # consecutives 1s, we get the total number of branches, in a single iteration!
+
+  # Start at one (we have the longest chain)
   $distinctChains = 1
 
-  # Go through the chain
+  # Go through the longest chain
   $consecutiveOnes = 0
   for ($i = 0; $i -lt $Chain.Count; $i++) {
+    # Count consecutive ones
     if ($Chain[$i].Difference -eq 1) {
       $consecutiveOnes += 1
-    } else {
+    }
+
+    # Aggregate new distinct chains
+    else {
       Write-Host "$i consecutiveOnes = $consecutiveOnes"
       $distinctChains *= (Get-Fibonacci ($consecutiveOnes - 1)) + 1
       $consecutiveOnes = 0
     }
   }
+
+  # Return the result
   $distinctChains
 }
 
@@ -112,13 +115,12 @@ function Get-Fibonacci {
   #>
   param ($I)
 
-  if ($I -le 0) {
+  # Just regular recurssive fibonacci
+  if ($I -le 0) { # allow negative numbers here too
     0
-  }
-  elseif ($I -eq 1) {
+  } elseif ($I -eq 1) {
     1
-  }
-  else {
+  } else {
     $I + (Get-Fibonacci ($I - 1))
   }
 }
@@ -145,5 +147,5 @@ if (-Not $Part2) {
 if ($Part2) {
   $chain = Get-Chain $ratings
   $distinctChains = Get-DistinctChains2 $chain
-  Write-Host "Result = $distinctChains"
+  Write-Host "`nResult = $distinctChains"
 }
