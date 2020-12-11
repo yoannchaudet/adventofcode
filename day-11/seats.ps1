@@ -63,6 +63,63 @@ function Get-AdjacentOccupiedSeats {
   $adjacentCells
 }
 
+function Get-VisibleOccupiedSeats {
+ <#
+  .SYNOPSIS
+  Return the number of visible seats that are occupied.
+  #>
+  param (
+    [char[][]] $Layout,
+    [int] $X,
+    [int] $Y
+  )
+
+
+  # Adjacent cells are:
+  # xxx
+  # x.x
+  # xxx
+  $adjacentCells = 0
+  $adjacentOffsets = @(
+    @{ X =  -1; Y = -1},
+    @{ X =   0; Y = -1},
+    @{ X =  +1; Y = -1},
+    @{ X =  -1 ;Y =  0},
+    @{ X =  +1 ;Y =  0},
+    @{ X =  -1 ;Y = +1},
+    @{ X =   0 ;Y = +1},
+    @{ X =  +1 ;Y = +1}
+  )
+
+  # Collect the visible occupied cells
+  foreach ($offset in $adjacentOffsets) {
+    $adjacentX = $X
+    $adjacentY = $Y
+    # The offsets are now vectors
+    while ($true) {
+      $adjacentX += $offset.X
+      $adjacentY += $offset.Y
+      if ($adjacentX -In 0..($Layout[0].Length - 1) -and $adjacentY -In 0..($Layout.Length - 1)) {
+        if ($Layout[$adjacentY][$adjacentX] -eq $OCCUPIED_SEAT) {
+          $adjacentCells += 1
+          break
+        } else {
+          # Stop when seeing a chair
+          if ($Layout[$adjacentY][$adjacentX] -eq $EMPTY_SEAT) {
+            break
+          }
+        }
+      }
+
+      # Stop when hitting a wall
+      else {
+        break
+      }
+    }
+  }
+  $adjacentCells
+}
+
 function Copy-Layout {
   <#
   .SYNOPSIS
@@ -100,7 +157,9 @@ function Invoke-Simulation {
   Invoke the simulation on a given layout until the total number of occupied seats stabilizes.
   #>
   param (
-    [char[][]] $Layout
+    [char[][]] $Layout,
+    [int] $OccupiedToEmptyThreshold = 4,
+    [scriptblock] $GetOccupiedSeatsBlock = { param ([char[][]] $Layout, [int] $X, [int] $Y) Get-AdjacentOccupiedSeats $Layout $X $Y }
   )
 
   # Get the previous occupied seats
@@ -123,12 +182,12 @@ function Invoke-Simulation {
       foreach ($x in 0..($Layout[0].Length - 1)) {
 
         # Empty seats and no adjacents occupied seats -> occupied
-        if ($Layout[$y][$x] -eq $EMPTY_SEAT -and (Get-AdjacentOccupiedSeats $Layout $x $y) -eq 0) {
+        if ($Layout[$y][$x] -eq $EMPTY_SEAT -and (& $GetOccupiedSeatsBlock $Layout $x $y) -eq 0) {
           $stepLayout[$y][$x] = $OCCUPIED_SEAT
         }
 
         # Occupied and 4 or more adjacent seats occupied -> empty
-        if ($Layout[$y][$x] -eq $OCCUPIED_SEAT -and (Get-AdjacentOccupiedSeats $Layout $x $y) -ge 4) {
+        if ($Layout[$y][$x] -eq $OCCUPIED_SEAT -and (& $GetOccupiedSeatsBlock $Layout $x $y) -ge $OccupiedToEmptyThreshold) {
           $stepLayout[$y][$x] = $EMPTY_SEAT
         }
       }
@@ -159,6 +218,13 @@ $layout = [char[][]] @(Get-Content $WaitingRoomLayout)
 $layout | Write-Host
 
 # Get the stable occupied seats
-$stableOccupiedSeats = Invoke-Simulation $layout
+$options = @{
+  Layout = $layout
+}
+if ($Part2) {
+  $options['OccupiedToEmptyThreshold'] = 5
+  $options['GetOccupiedSeatsBlock'] = { param ([char[][]] $Layout, [int] $X, [int] $Y) Get-VisibleOccupiedSeats $Layout $X $Y }
+}
+$stableOccupiedSeats = Invoke-Simulation @options
 Write-Host
 Write-Host "Stable occupied seats = $stableOccupiedSeats"
