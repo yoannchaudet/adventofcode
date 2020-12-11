@@ -113,4 +113,7 @@ Starting with PowerShell 7.1+:
 ``` ps
 # Part 1
 ./day-10/jolt.ps1 ./day-10/input.txt
+
+# Part 2
+./day-10/jolt.ps1 ./day-10/input.txt -Part2
 ```
