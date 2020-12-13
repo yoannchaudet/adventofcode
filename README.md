@@ -16,6 +16,7 @@ Trying the 2020 [Advent of Code](https://adventofcode.com/2020).
 - [Day-10](#day-10)
 - [Day-11](#day-11)
 - [Day-12](#day-12)
+- [Day-13](#day-13)
 
 ## Day-01
 
@@ -135,4 +136,14 @@ Starting with PowerShell 7.1+:
 ```
 # Part 1
 ./day-12/ship.ps1 ./day-12/input.txt
+
+# Part 2
+./day-12/ship.ps1 ./day-12/input.txt -Part2
+```
+
+## Day-13
+
+``` ps
+# Part 1
+./day-13/bus.ps1 ./day-13/input.txt
 ```
