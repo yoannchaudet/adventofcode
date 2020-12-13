@@ -15,6 +15,7 @@ Trying the 2020 [Advent of Code](https://adventofcode.com/2020).
 - [Day-09](#day-09)
 - [Day-10](#day-10)
 - [Day-11](#day-11)
+- [Day-12](#day-12)
 
 ## Day-01
 
@@ -127,4 +128,11 @@ Starting with PowerShell 7.1+:
 
 # Part 2
 ./day-11/seats.ps1 ./day-11/input.txt -Part2
+```
+
+## Day-12
+
+```
+# Part 1
+./day-12/ship.ps1 ./day-12/input.txt
 ```
