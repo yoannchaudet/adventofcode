@@ -70,21 +70,49 @@ function Get-NewDirection {
   $Direction
 }
 
+function Get-90DegreesRotatedPoint {
+  <#
+  .SYNOPSIS
+  Rotate a given point by 90 degrees (clockwise).
+  #>
+  param ([PSCustomObject] $Point, [switch] $Counterclockwise)
+
+  if ($Counterclockwise) {
+    [PSCustomObject] @{
+      East  = -$Point.North
+      North = $Point.East
+    }
+  } else {
+    [PSCustomObject] @{
+      East  = $Point.North
+      North = -$Point.East
+    }
+  }
+}
+
 # Get the instructions
 $instructions = Get-Instructions
 
-# Initial location
-$location = [PSCustomObject] @{
+# Ship location
+$shipLocation = [PSCustomObject] @{
   East  = 0
   North = 0
 }
 
-# Initial direction (in degrees)
+# Waypoint location (part 2 only)
+$waypointLocation = [PSCustomObject] @{
+  East  = 10
+  North = 1
+}
+
+# Initial direction of the ship (in degrees), part 1 only
 # - North: 90
 # - East: 0
 # - South: 270
 # - West: 180
-$direction = 0
+$shipDirection = 0
+
+# Direction vectors
 $directionVectors = @{
   #      (East,North)
   0   = @(+1, 0)
@@ -99,44 +127,76 @@ foreach ($instruction in $instructions) {
 
     # Simple directions
     "N" {
-      $location.North += $instruction.Value
+      if (-Not $Part2) {
+        $shipLocation.North += $instruction.Value
+      } else {
+        $waypointLocation.North += $instruction.Value
+      }
       break
     }
     "S" {
-      $location.North -= $instruction.Value
+      if (-Not $Part2) {
+        $shipLocation.North -= $instruction.Value
+      } else {
+        $waypointLocation.North -= $instruction.Value
+      }
       break
     }
     "E" {
-      $location.East += $instruction.Value
+      if (-Not $Part2) {
+        $shipLocation.East += $instruction.Value
+      } else {
+        $waypointLocation.East += $instruction.Value
+      }
       break
     }
     "W" {
-      $location.East -= $instruction.Value
+      if (-Not $Part2) {
+        $shipLocation.East -= $instruction.Value
+      } else {
+        $waypointLocation.East -= $instruction.Value
+      }
       break
     }
 
     # Left/Right
     "L" {
-      $direction = Get-NewDirection $direction $instruction.Value
+      if (-Not $Part2) {
+        $shipDirection = Get-NewDirection $shipDirection $instruction.Value
+      } else {
+        for ($i = 0; $i -lt ($instruction.Value / 90); $i++) {
+          $waypointLocation = Get-90DegreesRotatedPoint $waypointLocation -Counterclockwise
+        }
+      }
       break
     }
     "R" {
-      $direction = Get-NewDirection $direction (-1 * $instruction.Value)
+      if (-Not $Part2) {
+        $shipDirection = Get-NewDirection $shipDirection (-1 * $instruction.Value)
+      } else {
+        for ($i = 0; $i -lt ($instruction.Value / 90); $i++) {
+          $waypointLocation = Get-90DegreesRotatedPoint $waypointLocation
+        }
+      }
       break
     }
 
     # Forward
     "F" {
-      $vector = $directionVectors[$direction]
-      $location.East += $vector[0] * $instruction.Value
-      $location.North += $vector[1] * $instruction.Value
+      if (-Not $Part2) {
+        $vector = $directionVectors[$shipDirection]
+        $shipLocation.East += $vector[0] * $instruction.Value
+        $shipLocation.North += $vector[1] * $instruction.Value
+      } else {
+        $shipLocation.East += $waypointLocation.East * $instruction.Value
+        $shipLocation.North += $waypointLocation.North * $instruction.Value
+      }
       break
     }
   }
-  Write-Host "$($Instruction.Action)$($Instruction.Value) `t`t $($location.East),$($location.North)"
-
+  Write-Host "$($Instruction.Action)$($Instruction.Value) `tship`t$($shipLocation.East),$($shipLocation.North)`twaypoint`t$($waypointLocation.East),$($waypointLocation.North)"
 }
 
 # Final location
-$location | Format-Table
-Write-Host "Manhattan distance = $(Get-ManhattanDistance $location)"
+$shipLocation | Format-Table
+Write-Host "Manhattan distance = $(Get-ManhattanDistance $shipLocation)"
