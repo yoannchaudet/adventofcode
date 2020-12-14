@@ -45,6 +45,93 @@ function Get-InitializationProgram {
   }
 }
 
+function Get-Masks {
+  <#
+  .SYNOPSIS
+  Return all possible masks for a given mask.
+  #>
+  param ([string] $Mask)
+
+  # Count the number of x in the mask
+  $x = @([char[]] $Mask | Where-Object { $_ -eq 'X' }).Length
+
+  # Return the mask as is if no X
+  if ($x -eq 0) {
+    return $Mask
+  }
+
+  # Else enumerate the masks
+  for ($i = 0; $i -lt [Math]::Pow(2, $x); $i++) {
+    # Get binary version of i
+    $i2 = [char[]] [System.Convert]::ToString($i, 2).PadLeft($x, '0')
+
+    # Transorm the mask
+    $xPosition = 0
+    ([char[]] $Mask | ForEach-Object {
+      if ($_ -eq 'X') {
+        $i2[$xPosition]
+        $xPosition += 1
+      } else {
+        $_
+      }
+    }) -Join ""
+  }
+}
+
+function Get-MaskedValue {
+  <#
+  .SYNOPSIS
+  Return a masked value.
+  #>
+  param (
+    [Int64] $Value,
+    [string] $Mask
+  )
+
+  # Get the value in binary (36-padded)
+  $value2 = [char[]] [System.Convert]::ToString($Value, 2).PadLeft($Mask.Length, '0')
+
+  # Apply the mask
+  for ($j = 0; $j -lt $Mask.Length; $j++) {
+    $m = $Mask[$j]
+    if ($m -eq '0') {
+      $value2[$j] = '0'
+    } elseif ($m -eq '1') {
+      $value2[$j] = '1'
+    }
+  }
+
+  # Return the masked value
+  [Int64] [System.Convert]::ToInt64(($value2 -Join ""), 2)
+}
+
+function Get-FloatingMaskedValue {
+  <#
+  .SYNOPSIS
+  Return a floating masked value.
+  #>
+  param (
+    [Int64] $Value,
+    [string] $Mask
+  )
+
+  # Get the value in binary (36-padded)
+  $value2 = [char[]] [System.Convert]::ToString($Value, 2).PadLeft($Mask.Length, '0')
+
+  # Apply the mask
+  for ($j = 0; $j -lt $Mask.Length; $j++) {
+    $m = $Mask[$j]
+    if ($m -eq '1') {
+      $value2[$j] = '1'
+    } elseif ($m -eq 'X') {
+      $value2[$j] = 'X'
+    }
+  }
+
+  # Return the masked value
+  $value2 -Join ""
+}
+
 function Invoke-InitializationProgram {
   <#
   .SYNOPSIS
@@ -59,21 +146,19 @@ function Invoke-InitializationProgram {
   $Instructions | ForEach-Object {
     $i = $_
 
-    # Get the number in binary (36-padded)
-    $value2 = [char[]] [System.Convert]::ToString($i.Value,2).PadLeft(36, '0')
-
-    # Apply the mask
-    for ($j = 0; $j -lt $i.Mask.Length; $j++) {
-      $m = $i.Mask[$j]
-      if ($m -eq '0') {
-        $value2[$j] = '0'
-      } elseif ($m -eq '1') {
-        $value2[$j] = '1'
-      }
+    # Store the masked value at the address
+    if (-Not $Part2) {
+      $memory[$i.Address] = Get-MaskedValue $i.Value $i.Mask
     }
 
-    # Store the number in memory
-    $memory[$i.Address] = [Int64] [System.Convert]::ToInt64(($value2 -Join ""), 2)
+    # Store the value at all masked address
+    else {
+      $adrMask = Get-FloatingMaskedValue $i.Address $i.Mask
+      foreach ($mask in @(Get-Masks $adrMask)) {
+        $adr = [Int64] [System.Convert]::ToInt64($mask, 2)
+        $memory[$adr] = $i.Value
+      }
+    }
   }
 
   [Int64] $sum = 0
