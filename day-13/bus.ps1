@@ -65,15 +65,118 @@ function Get-EarliestBusId {
   }
 }
 
-# Get the notes
-$n = Get-Notes
-$n | Format-Table
+function Get-BusOffsets {
+  <#
+  .SYNOPSIS
+  Read the notes and extract the bus offsets.
+  #>
 
-# Find the earliest bus we can take
-$bus = Get-EarliestBusId $n
-$bus | Format-Table
+  # Read notes
+  $lines = Get-Content $Notes
+  if ($lines.Length -lt 2) {
+    throw "Not enough lines in the notes"
+  }
 
-# Compute wait time
-$waitTime = $bus.Timestamp - $n.EarliestTimestamp
-Write-Host "Wait time = $waitTime"
-Write-Host "Result = $($waitTime * $bus.BusId)"
+  # Extract bus offsets
+  $busIds = $lines[1].Split(",")
+  for ($i = 0; $i -lt $busIds.Length; $i++) {
+    if ($busIds[$i] -ne "x") {
+      # Return the object
+      [PSCustomObject] @{
+        BusId = [int] $busIds[$i]
+        Offset = $i
+      }
+    }
+  }
+}
+
+function Get-EarliestTimestamp {
+  <#
+  .SYNOPSIS
+  Find the earliest timetstamp satisfying the entire schedule.
+
+  .DESCRIPTION
+  I got some help on this one.
+
+  Only way to find a timestamp is to iterate.
+
+  Start incrementing the timestamp by the first bus id (this way we know each timestamp will
+  match the first bus). When we find a timestamp that also matches the second bus id, we multiply
+  the counter by the bus id, and so on.
+
+  The key is that bus ids are prime numbers so they can be divided by 1 and themselves only.
+
+  That means incrementing the counter like we do will not cause us to miss any timestamp.
+  #>
+  param ([PSCustomObject] $Offsets, [uint64] $Start = 0)
+
+  # Start with the first bus id
+  $ts = $Offsets[0].BusId
+
+  # Increment to use for the search
+  $increment = $ts
+
+  # Offset of the last bus id included in the increment
+  $incrementOffset = 0
+
+  # Start the loop
+  while ($true) {
+    Write-Host "Trying $ts"
+
+    # End of the search flag
+    $found = $true
+
+    # Test the timestamp against all bus ids
+    for ($i = 0; $i -lt $Offsets.Count; $i++) {
+      # When the timestamp matches a new bus, increment the counter
+      if (($ts + $Offsets[$i].Offset) % $Offsets[$i].BusId -eq 0) {
+        if ($incrementOffset -lt $i) {
+          $increment = $increment * $Offsets[$i].BusId
+          $incrementOffset += 1
+          Write-Host "Increment = $increment"
+        }
+      }
+
+      # Exit the loop
+      else {
+        $found = $false
+        break
+      }
+    }
+
+    # Exit
+    if ($found) {
+      return $ts
+    }
+
+    # Increment the timestamp
+    $ts += $increment
+  }
+}
+
+# Part 1
+if (-Not $Part2) {
+  # Get the notes
+  $n = Get-Notes
+  $n | Format-Table
+
+  # Find the earliest bus we can take
+  $bus = Get-EarliestBusId $n
+  $bus | Format-Table
+
+  # Compute wait time
+  $waitTime = $bus.Timestamp - $n.EarliestTimestamp
+  Write-Host "Wait time = $waitTime"
+  Write-Host "Result = $($waitTime * $bus.BusId)"
+}
+
+# Part 2
+else {
+  # Read the offsets from the notes
+  $offsets = Get-BusOffsets
+  $offsets | Format-Table
+
+  # Find earliest timestamp satisfying the entire schedule
+  $ts = Get-EarliestTimestamp $offsets
+  Write-Host "Timestamp = $ts"
+}
