@@ -18,6 +18,7 @@ Trying the 2020 [Advent of Code](https://adventofcode.com/2020).
 - [Day-12](#day-12)
 - [Day-13](#day-13)
 - [Day-14](#day-14)
+- [Day-15](#day-15)
 
 ## Day-01
 
@@ -157,4 +158,11 @@ Starting with PowerShell 7.1+:
 ``` ps
 # Part 1
 ./day-14/docking.ps1 ./day-14/input.txt
+```
+
+## Day-15
+
+``` ps
+# Part 1
+./day-15/memory.ps1 -InitNumbers 16,11,15,0,1,7
 ```
