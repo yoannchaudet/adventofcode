@@ -165,4 +165,7 @@ Starting with PowerShell 7.1+:
 ``` ps
 # Part 1
 ./day-15/memory.ps1 -InitNumbers 16,11,15,0,1,7
+
+# Part 2
+./day-15/memory.ps1 -InitNumbers 16,11,15,0,1,7 -Part2
 ```

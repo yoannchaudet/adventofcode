@@ -22,12 +22,6 @@ param (
 Set-StrictMode -version 'Latest'
 $ErrorActionPreference = 'Stop'
 
-# Init the context
-$ctx = @{}
-for ($i = 0; $i -lt $InitNumbers.Count; $i++) {
-  $ctx[$InitNumbers[$i]] = @(0, ($i + 1))
-}
-
 function Get-NumberSpoken {
   <#
   .SYNOPSIS
@@ -38,18 +32,23 @@ function Get-NumberSpoken {
     [int] $Turn
   )
 
-  # The turn is one of the init number
-  if ($Turn -le $InitNumbers.Length) {
-    $InitNumbers[$Turn - 1]
+  # Init the context
+  $ctx = @{}
+  for ($i = 0; $i -lt $InitNumbers.Count; $i++) {
+    $ctx[$InitNumbers[$i]] = @(0, ($i + 1))
   }
 
-  # Handle regular turn
-  else {
-    # Get the last spoken number
-    $lastSpokenNumber = Get-NumberSpoken ($Turn - 1)
+  # Set previous number
+  $lastSpokenNumber = $InitNumbers[-1]
+
+  # Iterate over the turns
+  for ($currentTurn = $InitNumbers.Length + 1; $currentTurn -le $Turn; $currentTurn++) {
+    if ($currentTurn % 100000 -eq 0) {
+      Write-Host "Turn $currentTurn"
+    }
 
     # Get the last turns
-    [int[]] $lastTurns = $ctx.ContainsKey($lastSpokenNumber) ? $ctx[$lastSpokenNumber] : @(0, $Turn)
+    [int[]] $lastTurns = $ctx.ContainsKey($lastSpokenNumber) ? $ctx[$lastSpokenNumber] : @(0, $currentTurn)
 
     # Compute next number
     if ($lastTurns[0] -ne 0) {
@@ -60,15 +59,19 @@ function Get-NumberSpoken {
 
     # Update context for this turn
     if ($ctx.ContainsKey($nextNumber)) {
-      $ctx[$nextNumber] = @($ctx[$nextNumber][1], $Turn)
+      $ctx[$nextNumber] = @($ctx[$nextNumber][1], $currentTurn)
     } else {
-      $ctx[$nextNumber] = @(0, $Turn)
+      $ctx[$nextNumber] = @(0, $currentTurn)
     }
 
-    # Return next number
-    $nextNumber
+    $lastSpokenNumber = $nextNumber
   }
+
+  $lastSpokenNumber
 }
 
-$number = Get-NumberSpoken 2020
-Write-Host "Result = $number"
+$turn = $Part2 ? 30000000 : 2020
+$number = Get-NumberSpoken $turn
+Write-Host "Result ($turn) = $number"
+
+# 175594 too high
