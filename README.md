@@ -176,4 +176,7 @@ Starting with PowerShell 7.1+:
 ``` ps
 # Part 1
 ./day-16/train.ps1 ./day-16/input.txt
+
+# Part 2
+./day-16/train.ps1 ./day-16/input.txt -Part2
 ```
