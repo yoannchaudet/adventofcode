@@ -52,6 +52,9 @@ var boards = GetBoards(inputLines.ToList(), drawnNumbers);
 var winningBoard = boards.MinBy(board => board.VictoryTurn);
 Console.WriteLine("Result = {0}", winningBoard.GetScore());
 
+var lastWinningBoard = boards.MaxBy(board => board.VictoryTurn);
+Console.WriteLine("Result = {0}", lastWinningBoard.GetScore());
+
 class Board
 {
   // The actual board.
