@@ -1,12 +1,27 @@
 ﻿var inputPath = "./inputs/input.txt";
 var grid = GetGrid(inputPath);
 
-var flashes = 0;
-for (var step = 1; step <= 100; step++)
 {
-  flashes += ProcessOneStep(ref grid);
+  var flashes = 0;
+  for (var step = 1; step <= 100; step++)
+  {
+    flashes += ProcessOneStep(ref grid);
+  }
+  Console.WriteLine("Flashes after 100 steps (part 1): {0}", flashes);
 }
-Console.WriteLine("Flashes after 100 steps: {0}", flashes);
+
+// Reset grid
+grid = GetGrid(inputPath);
+{
+  var step = 0;
+  var flashes = 0;
+  do
+  {
+    flashes = ProcessOneStep(ref grid);
+    step++;
+  } while (flashes != 100);
+  Console.WriteLine("Synchronized flashes (part 2) at step: {0}", step);
+}
 
 // Perform one step and return the number of octopuses that flashed.
 static int ProcessOneStep(ref int[][] grid)
