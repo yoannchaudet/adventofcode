@@ -3,12 +3,11 @@ var cave = ParseCave(filePath);
 
 var distinctPaths = new List<string>();
 WalkCaves(cave, "", ref distinctPaths);
-
-foreach (var path in distinctPaths)
-{
-  Console.WriteLine(path);
-}
 Console.WriteLine("Distinct paths (part 1): {0}", distinctPaths.Count);
+
+var distinctPaths2 = new List<string>();
+WalkCaves2(cave, "", ref distinctPaths2);
+Console.WriteLine("Distinct paths (part 2): {0}", distinctPaths2.Count);
 
 static void WalkCaves(Cave cave, string path, ref List<string> distinctPaths)
 {
@@ -33,7 +32,44 @@ static void WalkCaves(Cave cave, string path, ref List<string> distinctPaths)
     }
     else
     {
-      WalkCaves(neighbor, (path + " " + neighbor.Label).Trim(), ref distinctPaths);
+      WalkCaves(neighbor, path + "," + neighbor.Label, ref distinctPaths);
+    }
+  }
+}
+
+static void WalkCaves2(Cave cave, string path, ref List<string> distinctPaths)
+{
+  foreach (var neighbor in cave.Neighbors)
+  {
+    if (neighbor.Label == "start")
+    {
+      continue;
+    }
+    else if (neighbor.Label == "end")
+    {
+      if (!distinctPaths.Contains(path))
+      {
+        distinctPaths.Add(path);
+      }
+      continue;
+    }
+    else
+    {
+      if (neighbor.IsSmallCave && path.Contains(neighbor.Label))
+      {
+        // This is really not optimized...
+        var visitedSmallCaveTwice = path.Split(',').ToList().GroupBy(x => x).Where(x => x.Key.ToLower() == x.Key && x.Count() > 1).ToList().Count > 0;
+        if (!visitedSmallCaveTwice)
+        {
+          visitedSmallCaveTwice = true;
+        }
+        else
+        {
+          continue;
+        }
+      }
+
+      WalkCaves2(neighbor, path + "," + neighbor.Label, ref distinctPaths);
     }
   }
 }
