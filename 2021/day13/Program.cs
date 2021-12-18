@@ -3,14 +3,28 @@
 var inputPath = "./inputs/input.txt";
 var (transparentPaper, folds) = GetTransparentPaper(inputPath);
 
+// Do the first fold and count the dots
 var firstFold = Fold(transparentPaper, folds.First());
 var dots = firstFold.Select(y => y.Count(x => x == true)).Sum();
+Console.WriteLine("Dots after first fold (part 1): {0}", dots);
 
-var secondFold = Fold(firstFold, folds.Skip(1).First());
-var dots2 = secondFold.Select(y => y.Count(x => x == true)).Sum();
+// Do all folds
+var currentPaper = firstFold;
+foreach (var fold in folds.Skip(1))
+{
+  currentPaper = Fold(currentPaper, fold);
+}
 
-Console.WriteLine("Dots after first fold: {0}", dots);
-Console.WriteLine("Dots after second fold: {0}", dots2);
+// Print the result
+Console.WriteLine("Part 2:");
+for (var y = 0 ; y < currentPaper.Length ; y++)
+{
+  for (var x = 0 ; x < currentPaper[y].Length ; x++)
+  {
+    Console.Write(currentPaper[y][x] ? '#' : '.');
+  }
+  Console.WriteLine();
+}
 
 // Perform one fold and return the new transparent paper
 static bool[][] Fold(bool[][] paper, Fold fold)
