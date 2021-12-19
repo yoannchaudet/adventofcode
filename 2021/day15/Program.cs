@@ -5,6 +5,10 @@ var map = GetMap(inputPath);
 var shortestRisk = GetShortestRisk(map, map[0][0], map[map.Length - 1][map[map.Length - 1].Length - 1]);
 Console.WriteLine("Shortest risk (part 1): {0}", shortestRisk);
 
+var map2 = GetMap(inputPath, true);
+shortestRisk = GetShortestRisk(map2, map2[0][0], map2[map2.Length - 1][map2[map2.Length - 1].Length - 1]);
+Console.WriteLine("Shortest risk (part 2): {0}", shortestRisk);
+
 // Hello Dijkstra!
 static int GetShortestRisk(Point[][] map, Point source, Point destination)
 {
@@ -58,25 +62,60 @@ static int GetShortestRisk(Point[][] map, Point source, Point destination)
   }
 }
 
-static Point[][] GetMap(string inputPath)
+static Point[][] GetMap(string inputPath, bool isPart2 = false)
 {
-  List<Point[]> map = new List<Point[]>();
+  var lines = File.ReadAllLines(inputPath);
+  var map = new Point[lines.Length][];
 
   // Init the map
-  int y = 0;
-  foreach (var line in File.ReadAllLines(inputPath))
+  for (var y = 0; y < lines.Length; y++)
   {
+    var line = lines[y];
     var cols = new Point[line.Length];
     for (var x = 0; x < line.Length; x++)
     {
       cols[x] = new Point(x, y, int.Parse(line[x].ToString()));
     }
-    map.Add(cols);
-    y++;
+    map[y] = cols;
+  }
+
+  if (isPart2)
+  {
+    // Grow the map horizontally
+    for (var y = 0; y < map.Length; y++)
+    {
+      var cols = new Point[map[y].Length * 5];
+      for (var x = 0; x < map[y].Length; x++)
+      {
+        cols[x] = map[y][x];
+        cols[x + map[y].Length * 1] = new Point(x + map[y].Length * 1, y, GetIncrementalRisk(cols[x].Risk + 1));
+        cols[x + map[y].Length * 2] = new Point(x + map[y].Length * 2, y, GetIncrementalRisk(cols[x].Risk + 2));
+        cols[x + map[y].Length * 3] = new Point(x + map[y].Length * 3, y, GetIncrementalRisk(cols[x].Risk + 3));
+        cols[x + map[y].Length * 4] = new Point(x + map[y].Length * 4, y, GetIncrementalRisk(cols[x].Risk + 4));
+      }
+      map[y] = cols;
+    }
+
+    // Grow the map vertically
+    var newMap = new Point[map.Length * 5][];
+    for (var y = 0; y < map.Length; y++ ) {
+      newMap[y] = map[y];
+      newMap[y + map.Length * 1] = new Point[map[y].Length];
+      newMap[y + map.Length * 2] = new Point[map[y].Length];
+      newMap[y + map.Length * 3] = new Point[map[y].Length];
+      newMap[y + map.Length * 4] = new Point[map[y].Length];
+      for (var x = 0; x < map[y].Length; x++) {
+        newMap[y + map.Length * 1][x] = new Point(x, y + map.Length * 1, GetIncrementalRisk(map[y][x].Risk + 1));
+        newMap[y + map.Length * 2][x] = new Point(x, y + map.Length * 2, GetIncrementalRisk(map[y][x].Risk + 2));
+        newMap[y + map.Length * 3][x] = new Point(x, y + map.Length * 3, GetIncrementalRisk(map[y][x].Risk + 3));
+        newMap[y + map.Length * 4][x] = new Point(x, y + map.Length * 4, GetIncrementalRisk(map[y][x].Risk + 4));
+      }
+    }
+    map = newMap;
   }
 
   // Init neighbors
-  for (y = 0; y < map.Count; y++)
+  for (var y = 0; y < map.Length; y++)
   {
     for (var x = 0; x < map[y].Length; x++)
     {
@@ -101,16 +140,21 @@ static Point[][] GetMap(string inputPath)
       }
 
       // Bottom
-      if (y < map.Count - 1)
+      if (y < map.Length - 1)
       {
         point.Neighbours.Add(map[y + 1][x]);
       }
     }
   }
 
-  return map.ToArray();
+  return map;
 }
 
+static int GetIncrementalRisk(int risk)
+{
+  if (risk > 9) risk = risk % 10 + 1;
+  return risk;
+}
 
 struct Point
 {
