@@ -1,4 +1,6 @@
-﻿var inputPath = "./inputs/sample.txt";
+﻿using Priority_Queue;
+
+var inputPath = "./inputs/input.txt";
 var map = GetMap(inputPath);
 var shortestRisk = GetShortestRisk(map, map[0][0], map[map.Length - 1][map[map.Length - 1].Length - 1]);
 Console.WriteLine("Shortest risk (part 1): {0}", shortestRisk);
@@ -9,34 +11,36 @@ static int GetShortestRisk(Point[][] map, Point source, Point destination)
   // See https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
 
   // Init
-  var q = new List<Point>();
+  var q = new SimplePriorityQueue<Point, int>();
   var dist = new Dictionary<Point, int>();
   var prev = new Dictionary<Point, Point?>();
+  dist[source] = 0;
+  prev[source] = null;
   map.SelectMany(p => p).ToList().ForEach(vertex =>
   {
-    dist.Add(vertex, int.MaxValue);
-    prev.Add(vertex, null);
-    q.Add(vertex);
+    if (!vertex.Equals(source))
+    {
+      dist.Add(vertex, int.MaxValue);
+      prev.Add(vertex, null);
+    }
+    q.Enqueue(vertex, dist[vertex]);
   });
-  dist[source] = 0;
 
   // Search
   while (q.Count > 0)
   {
-    Console.WriteLine(q.Count);
-    var u = q.MinBy(p => dist[p]);
-
-    q.Remove(u);
-    if (u.X == destination.X && u.Y == destination.Y) break;
+    var u = q.Dequeue();
+    if (u.Equals(destination))
+      break;
 
     foreach (var v in u.Neighbours)
     {
-      if (!q.Contains(v)) continue;
       var alt = dist[u] + v.Risk;
       if (alt < dist[v])
       {
         dist[v] = alt;
         prev[v] = u;
+        q.UpdatePriority(v, alt);
       }
     }
   }
@@ -123,5 +127,14 @@ struct Point
     Y = y;
     Risk = risk;
     Neighbours = new List<Point>();
+  }
+
+  public override bool Equals(object? obj)
+  {
+    if (obj is Point p)
+    {
+      return X == p.X && Y == p.Y;
+    }
+    return false;
   }
 }
