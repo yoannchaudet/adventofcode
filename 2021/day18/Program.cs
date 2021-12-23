@@ -1,19 +1,47 @@
 ﻿var inputPath = "./inputs/input.txt";
-SnailNumber sum = null;
-File.ReadAllLines(inputPath).ToList().ForEach(line =>
+Part1(inputPath);
+Part2(inputPath);
+
+static void Part1(string inputPath)
 {
-  var number = new SnailNumberParser(line).Parse();
-  if (sum == null)
+  SnailNumber sum = null;
+  File.ReadAllLines(inputPath).ToList().ForEach(line =>
   {
-    sum = number;
-  }
-  else
+    var number = new SnailNumberParser(line).Parse();
+    if (sum == null)
+    {
+      sum = number;
+    }
+    else
+    {
+      sum += number;
+    }
+  });
+  Console.WriteLine("Part 1");
+  Console.WriteLine("Sum: {0}", sum.ToString());
+  Console.WriteLine("Magnitude: {0}", sum.GetMagnitude());
+}
+
+static void Part2(string inputPath)
+{
+  var numbers = File.ReadAllLines(inputPath);
+  var maxMagnitude = int.MinValue;
+  foreach (var a in numbers)
   {
-    sum += number;
+    foreach (var b in numbers)
+    {
+      var pa = new SnailNumberParser(a).Parse();
+      var pb = new SnailNumberParser(b).Parse();
+      var magnitude = (pa + pb).GetMagnitude();
+      if (magnitude > maxMagnitude)
+      {
+        maxMagnitude = magnitude;
+      }
+    }
   }
-});
-Console.WriteLine("Sum: {0}", sum.ToString());
-Console.WriteLine("Magnitude: {0}", sum.GetMagnitude());
+  Console.WriteLine("Part 2");
+  Console.WriteLine("Max magnitude: {0}", maxMagnitude);
+}
 
 class SnailNumberParser
 {
