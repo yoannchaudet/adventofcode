@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 
-var inputPath = "./inputs/sample.txt";
+var inputPath = "./inputs/input.txt";
 var map = ReadInput(inputPath);
 
 // The set of beacons in absolute positions (with scanner 0 at the origin)
@@ -16,79 +16,70 @@ foreach (var point in map[0])
 var mappedScanners = new List<int>();
 mappedScanners.Add(0);
 
+var referencePoints = map[0].ToList();
+
 // While there are still scanners to map
 loop:
 while (mappedScanners.Count < map.Length)
 {
-  // Go over already mapped scanners
-  foreach (var mappedScanner in mappedScanners)
+  // Iterate through all points in the mapped scanner, use them as reference point
+  for (var i = 0; i < referencePoints.Count(); i++)
   {
-    // Iterate through all points in the mapped scanner, use them as reference point
-    foreach (var referencePoint in map[mappedScanner])
+    var referencePoint = referencePoints[i];
+
+    // Go over all scanners that have not been mapped yet
+    var availableScanners = map.Select((x, i) => i).Where(x => !mappedScanners.Contains(x));
+    foreach (var candidateScanner in availableScanners)
     {
-      // Go over all scanners that have not been mapped yet
-      var availableScanners = map.Select((x, i) => i).Where(x => !mappedScanners.Contains(x));
-      foreach (var candidateScanner in availableScanners)
+      // Go over all points in the available scanner
+      foreach (var candidateReferencePoint in map[candidateScanner])
       {
-        // Go over all points in the available scanner
-        foreach (var candidateReferencePoint in map[candidateScanner])
+        // Transpose both scanners (current and candidate) to an origin (that is immune to rotation) and compare
+        // common points
+        var transposedScanner = GetTransposedPoints(map[0], referencePoint);
+        var transposedCandidateScanner = GetTransposedPoints(map[candidateScanner], candidateReferencePoint);
+        var commonPoints = GetCommonPoints(transposedScanner, transposedCandidateScanner);
+
+        // If more than 12 points match, we have found an overlapping cube
+        if (commonPoints.Item1 >= 12)
         {
-          // Transpose both scanners (current and candidate) to an origin (that is immune to rotation) and compare
-          // common points
-          var transposedScanner = GetTransposedPoints(map[mappedScanner], referencePoint);
-          var transposedCandidateScanner = GetTransposedPoints(map[candidateScanner], candidateReferencePoint);
-          var commonPoints = GetCommonPoints(transposedScanner, transposedCandidateScanner);
+          // Add the candidate scanner to the list of mapped scanners
+          Console.WriteLine("Stitching scanner {0} (remaining {1})", candidateScanner, availableScanners.Count());
+          mappedScanners.Add(candidateScanner);
 
-          // If more than 12 points match, we have found an overlapping cube
-          if (commonPoints.Item1 >= 12)
+          // Get the candidate scanner in the correct orientation
+          var orientedCandidateScanner = transposedCandidateScanner.Select(x => x.GetAllCoordinates()[commonPoints.Item2]).ToArray();
+
+          // Transpose the oriented candidate scanner back to the scanner's reference point
+          // TODO: we need to transpose back to scanner0's referential...
+          var transposedOrientedCandidateScanner = GetTransposedPoints(orientedCandidateScanner, referencePoint);
+
+          // Add the beacons to the global map
+          foreach (var point in transposedOrientedCandidateScanner)
           {
-            // Add the candidate scanner to the list of mapped scanners
-            Console.WriteLine("Stitching scanner {0} (with {1})", candidateScanner, mappedScanner);
-            mappedScanners.Add(candidateScanner);
-
-            // Get the candidate scanner in the correct orientation
-            var orientedCandidateScanner = transposedCandidateScanner.Select(x => x.GetAllCoordinates()[commonPoints.Item2]).ToArray();
-
-            // Transpose the oriented candidate scanner back to the scanner's reference point
-            // TODO: we need to transpose back to scanner0's referential...
-            var transposedOrientedCandidateScanner = GetTransposedPoints(orientedCandidateScanner, referencePoint);
-
-            // Add the beacons to the global map
-            foreach (var point in transposedOrientedCandidateScanner)
+            if (!beacons.Contains(point))
             {
-              if (!beacons.Contains(point))
-              {
-                beacons.Add(point);
-              }
-              else
-              {
-                Console.WriteLine(point.ToString());
-              }
+              beacons.Add(point);
+              referencePoints.Add(point);
             }
-
-            goto loop;
+            else
+            {
+              Console.WriteLine(point.ToString());
+            }
           }
+
+          map[0] = beacons.ToArray();
+
+          goto loop;
         }
       }
     }
+
+
+    // No need to keep this ref point, it's not useful anymore
+    referencePoints.Remove(referencePoint);
   }
 }
-
-// foreach (var referencePoint in map[0])
-// {
-//   Console.WriteLine("ref point: " + referencePoint);
-//   for (var scanner = 1; scanner < map.Length; scanner++)
-//   {
-//     Console.WriteLine("scanner " + scanner);
-//     foreach (var localReferencePoint in map[scanner])
-//     {
-//       var transposedScannerZero = GetTransposedPoints(map[0], referencePoint);
-//       var transposedScannerN = GetTransposedPoints(map[scanner], localReferencePoint);
-//       var commonPoints = GetCommonPoints(transposedScannerZero, transposedScannerN);
-//       Console.WriteLine("Common points with scanner {2}: {0} (orientation {1})", commonPoints.Item1, commonPoints.Item2, scanner);
-//     }
-//   }
-// }
 
 Console.WriteLine("Beacons: " + beacons.Count);
 
