@@ -1,8 +1,11 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 
 var inputPath = "./inputs/input.txt";
 var map = ReadInput(inputPath);
+var stopwatch = new Stopwatch();
+stopwatch.Start();
 
 // The set of beacons in absolute positions (with scanner 0 at the origin)
 // Init it with the beacons of scanner 0
@@ -16,15 +19,20 @@ foreach (var point in map[0])
 var mappedScanners = new List<int>();
 mappedScanners.Add(0);
 
+// List of points that have been identified as beacons and need to be visited for
+// other matches
 var referencePoints = map[0].ToList();
 
+var scannerLocations = new Point[map.Length];
+scannerLocations[0] = new Point(0, 0, 0);
+
 // While there are still scanners to map
-loop:
 while (mappedScanners.Count < map.Length)
 {
   // Iterate through all points in the mapped scanner, use them as reference point
   for (var i = 0; i < referencePoints.Count(); i++)
   {
+  inner_loop:
     var referencePoint = referencePoints[i];
 
     // Go over all scanners that have not been mapped yet
@@ -47,11 +55,14 @@ while (mappedScanners.Count < map.Length)
           Console.WriteLine("Stitching scanner {0} (remaining {1})", candidateScanner, availableScanners.Count());
           mappedScanners.Add(candidateScanner);
 
+          // Add scanner location to the map
+          var orientedReferencePoint = candidateReferencePoint.GetAllCoordinates()[commonPoints.Item2];
+          scannerLocations[candidateScanner] = new Point(referencePoint.X - orientedReferencePoint.X, referencePoint.Y - orientedReferencePoint.Y, referencePoint.Z - orientedReferencePoint.Z);
+
           // Get the candidate scanner in the correct orientation
           var orientedCandidateScanner = transposedCandidateScanner.Select(x => x.GetAllCoordinates()[commonPoints.Item2]).ToArray();
 
           // Transpose the oriented candidate scanner back to the scanner's reference point
-          // TODO: we need to transpose back to scanner0's referential...
           var transposedOrientedCandidateScanner = GetTransposedPoints(orientedCandidateScanner, referencePoint);
 
           // Add the beacons to the global map
@@ -69,12 +80,11 @@ while (mappedScanners.Count < map.Length)
           }
 
           map[0] = beacons.ToArray();
-
-          goto loop;
+          i++;
+          goto inner_loop;
         }
       }
     }
-
 
     // No need to keep this ref point, it's not useful anymore
     referencePoints.Remove(referencePoint);
@@ -82,6 +92,28 @@ while (mappedScanners.Count < map.Length)
 }
 
 Console.WriteLine("Beacons: " + beacons.Count);
+Console.WriteLine("Time: " + stopwatch.ElapsedMilliseconds + " ms");
+
+var distances = new List<int>();
+foreach (var a in scannerLocations)
+{
+  foreach (var b in scannerLocations)
+  {
+    distances.Add(GetManhattanDistance(a, b));
+  }
+}
+for (var i = 0; i < scannerLocations.Length; i++)
+{
+  Console.WriteLine("Scanner #{0} location: {1}", i, scannerLocations[i].ToString());
+}
+var maxDistance = distances.Max();
+// 9740 too low
+Console.WriteLine("Maximum Manhattan distance: {0}", maxDistance);
+
+static int GetManhattanDistance(Point a, Point b)
+{
+  return Math.Abs(a.X - b.X) + Math.Abs(a.Y - b.Y) + Math.Abs(a.Z - b.Z);
+}
 
 // Return the maximum number of common points and the orientation between two arrays of points
 static (int, int) GetCommonPoints(Point[] a, Point[] b)
@@ -171,7 +203,7 @@ struct Point : IEqualityComparer<Point>
     return HashCode.Combine(obj.X, obj.Y, obj.Z);
   }
 
-  public string ToString()
+  public override string ToString()
   {
     return $"({X}, {Y}, {Z})";
   }
