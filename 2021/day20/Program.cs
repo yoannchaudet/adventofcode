@@ -1,7 +1,7 @@
 ﻿using System.Text;
 
 var inputPath = "./inputs/input.txt";
-var logSteps = true;
+var logSteps = false;
 var (algorithm, map) = ParseInput(inputPath);
 
 var infiniMap = new InfiniMap(map);
@@ -12,7 +12,8 @@ if (logSteps)
   Console.WriteLine("---");
 }
 
-for (var step = 1; step <= 2; step++)
+// For part 1, flip step to <= 2.
+for (var step = 1; step <= 50; step++)
 {
   infiniMap = Iterate(infiniMap, algorithm, step);
   if (logSteps)
