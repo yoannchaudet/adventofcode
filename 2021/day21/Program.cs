@@ -1,8 +1,8 @@
 ﻿var inputPath = "./inputs/input.txt";
-var game = new Game(inputPath, new DeterministicDie());
-game.Play();
+var game = new Game(inputPath, new DeterministicDie(), 1000);
 
-var part1 = game.PlayerScores[game.GetLoser()] * game.Die.Rolls;
+var winner = game.Play();
+var part1 = game.PlayerScores[winner == 0 ? 1 : 0] * game.Die.Rolls;
 Console.WriteLine("Part 1 = {0}", part1);
 
 class Game
@@ -11,7 +11,9 @@ class Game
   public int[] PlayerScores { get; private set; }
   public Die Die { get; private set; }
 
-  public Game(string inputPath, Die die)
+  public int MaxScore { get; private set; }
+
+  public Game(string inputPath, Die die, int maxScore)
   {
     // Init players
     PlayerPositions = File.ReadAllLines(inputPath).Select(line => line.Split(':')[1]).Select(int.Parse).Select(x => x - 1).ToArray();
@@ -19,16 +21,18 @@ class Game
     // Init scores + rest
     PlayerScores = new int[PlayerPositions.Length];
     this.Die = die;
+    this.MaxScore = maxScore;
   }
 
-  public void Play()
+  // Play a game and return the winner
+  public int Play()
   {
     // Index of the player that needs to play
     var player = 0;
     do
     {
       // Make the rolls
-      var roll = new int[3].Select(i => Die.Roll()).Sum();
+      var roll = new int[3].Select(i => Die.Roll()[0]).Sum();
 
       // Increment position
       PlayerPositions[player] = (PlayerPositions[player] + roll) % 10;
@@ -38,31 +42,10 @@ class Game
 
       // Prepare turn for next player
       player = (player + 1) % PlayerPositions.Length;
-    } while (GetWinner() == -1);
-  }
+    } while (PlayerScores[0] < MaxScore && PlayerScores[1] < MaxScore);
 
-  // Return the winner or -1 if no winner yet
-  private int GetWinner()
-  {
-    for (var i = 0; i < PlayerScores.Length; i++)
-    {
-      if (PlayerScores[i] >= 1000)
-      {
-        return i;
-      }
-    }
-    return -1;
-  }
-
-  public int GetLoser()
-  {
-    // Assuming one player only
-    var winner = GetWinner();
-    if (winner != -1)
-    {
-      return winner == 0 ? 1 : 0;
-    }
-    return -1;
+    // Return winner
+    return PlayerScores[0] >= MaxScore ? 0 : 1;
   }
 }
 
@@ -75,14 +58,14 @@ abstract class Die
     Rolls++;
   }
 
-  public abstract int Roll();
+  public abstract int[] Roll();
 }
 
 class DeterministicDie : Die
 {
   private int _value = 0;
 
-  public override int Roll()
+  public override int[] Roll()
   {
     IncrementRolls();
     _value++;
@@ -90,6 +73,14 @@ class DeterministicDie : Die
     {
       _value = 1;
     }
-    return _value;
+    return new int[] { _value };
+  }
+}
+
+class DiracDice : Die
+{
+  public override int[] Roll()
+  {
+    return new int[] { 1, 2, 3 };
   }
 }
