@@ -1,7 +1,26 @@
-﻿var rucksacks = GetRucksacks("input.txt");
-var part1 = rucksacks.Select(r => r.GetMisplacedItems().Select(item => GetPriority(item)).Sum()).Sum();
-Console.WriteLine("Part 1: {0}", part1);
+﻿var input = "input.txt";
 
+// Part 1
+{
+  var rucksacks = GetRucksacks(input);
+  var part1 = rucksacks.Select(r => r.GetMisplacedItems().Select(item => GetPriority(item)).Sum()).Sum();
+  Console.WriteLine("Part 1: {0}", part1);
+}
+
+// Part 2
+{
+  var groups = File.ReadAllLines(input).Chunk(3).ToList();
+  var part2 = groups.Select(group => GetPriority(GetBadge(group))).Sum();
+  Console.WriteLine("Part 2: {0}", part2);
+}
+
+// Return the badge (common character) in a group of 3 rucksacks (lines)
+static char GetBadge(string[] group)
+{
+  return group[0].Select(c => c).Where(c => group[1].Contains(c) && group[2].Contains(c)).First();
+}
+
+// Return all rucksacks from the input
 static List<Rucksack> GetRucksacks(string input)
 {
   return File.ReadAllLines(input).Select(line => new Rucksack(line)).ToList();
