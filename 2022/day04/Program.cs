@@ -4,14 +4,30 @@ var pairs = GetInput(input);
 // Part 1
 {
   var result = pairs.Where(pair =>
-  {
-    // item1 contains item2
-    return (pair.Item2.Start.Value >= pair.Item1.Start.Value && pair.Item2.End.Value <= pair.Item1.End.Value)
-    ||
-    // item2 contains item1
-    (pair.Item1.Start.Value >= pair.Item2.Start.Value && pair.Item1.End.Value <= pair.Item2.End.Value);
-  }).Count();
+     Includes(pair.Item1, pair.Item2) || Includes(pair.Item2, pair.Item1)
+  ).Count();
   Console.WriteLine("Part 1: {0}", result);
+}
+
+// Part 2
+{
+  var result = pairs.Where(pair =>
+    Includes(pair.Item1, pair.Item2) || Includes(pair.Item2, pair.Item1)
+    || Overlaps(pair.Item1, pair.Item2) || Overlaps(pair.Item2, pair.Item1)
+  ).Count();
+  Console.WriteLine("Part 2: {0}", result);
+}
+
+// Return a boolean indicating if a includes b
+static bool Includes(Range a, Range b)
+{
+  return b.Start.Value >= a.Start.Value && b.End.Value <= a.End.Value;
+}
+
+// Return a boolean indicating if a and b overlaps
+static bool Overlaps(Range a, Range b)
+{
+  return b.Start.Value <= a.End.Value && a.End.Value <= b.End.Value;
 }
 
 // Read the input
