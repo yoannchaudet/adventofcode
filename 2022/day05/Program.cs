@@ -4,17 +4,18 @@
 var input = "input.txt";
 List<Stack<char>> stacks;
 List<Instruction> instructions;
-ReadInput(input, out stacks, out instructions);
 
 // Part 1
 {
+  ReadInput(input, out stacks, out instructions);
+
   // Process the instructions
   foreach (var instruction in instructions)
   {
     for (var i = 0; i < instruction.Count; i++)
     {
-      var label = stacks[instruction.From-1].Pop();
-      stacks[instruction.To-1].Push(label);
+      var label = stacks[instruction.From - 1].Pop();
+      stacks[instruction.To - 1].Push(label);
     }
   }
 
@@ -25,6 +26,34 @@ ReadInput(input, out stacks, out instructions);
     labels += stack.Peek();
   }
   Console.WriteLine("Part 1: {0}", labels);
+}
+
+// Part 2
+{
+  ReadInput(input, out stacks, out instructions);
+
+  // Process the instructions
+  foreach (var instruction in instructions)
+  {
+    // Just keep a buffer to push the crate in the other direction
+    var tempCrates = "";
+    for (var i = 0; i < instruction.Count; i++)
+    {
+      tempCrates += stacks[instruction.From - 1].Pop();
+    }
+    foreach (var label in tempCrates.Reverse())
+    {
+      stacks[instruction.To - 1].Push(label);
+    }
+  }
+
+  // Get the labels at the top of each stack
+  var labels = "";
+  foreach (var stack in stacks)
+  {
+    labels += stack.Peek();
+  }
+  Console.WriteLine("Part 2: {0}", labels);
 }
 
 // Parse the input
