@@ -8,7 +8,7 @@ var buffer = File.ReadAllText("input.txt");
 // Part 2
 {
   var firstMessageMarker = GetFirstMarkerPosition(buffer, 14);
-  Console.WriteLine("Part 1: {0}", firstMessageMarker);
+  Console.WriteLine("Part 2: {0}", firstMessageMarker);
 }
 
 // Return the position of the first marker
