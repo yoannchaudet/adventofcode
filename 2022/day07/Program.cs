@@ -9,6 +9,13 @@ var root = ParseRoot("input.txt");
   Console.WriteLine("Part 1: {0}", sum);
 }
 
+// Part 2
+{
+  var unusedSpace = 70000000 - root.ComputeSize();
+  var folder = root.GetDirectories().Where(f => f.ComputeSize() >= 30000000 - unusedSpace).OrderBy(f => f.ComputeSize()).First();
+  Console.WriteLine("Part 2: {0}", folder.ComputeSize());
+}
+
 // Parse the input and return the root of the file system
 static Node ParseRoot(string input)
 {
