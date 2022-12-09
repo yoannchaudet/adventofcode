@@ -1,24 +1,50 @@
 ﻿// Part 1
 var moves = GetMoves("input.txt");
-var head = new Point();
-var tail = new Point();
-var uniqueTailPositions = new List<Point>();
-uniqueTailPositions.Add(tail);
-foreach (var move in moves)
 {
-  Console.WriteLine(move.ToString());
-  for (var i = 1; i <= move.Count; i++)
+  var head = new Point();
+  var tail = new Point();
+  var uniqueTailPositions = new List<Tuple<int, int>>();
+  uniqueTailPositions.Add(tail.GetTuple());
+  foreach (var move in moves)
   {
-    head.MoveHead(move.Direction);
-    tail.MoveTail(head);
-    if (!uniqueTailPositions.Contains(tail))
+    for (var i = 1; i <= move.Count; i++)
     {
-      uniqueTailPositions.Add(tail);
+      head.MoveHead(move.Direction);
+      tail.MoveTail(head);
+      if (!uniqueTailPositions.Contains(tail.GetTuple()))
+      {
+        uniqueTailPositions.Add(tail.GetTuple());
+      }
     }
   }
+  Console.WriteLine("Part 1: {0}", uniqueTailPositions.Count);
 }
-Console.WriteLine("Part 1: {0}", uniqueTailPositions.Count);
 
+// Part 2
+{
+  var head = new Point();
+  var tails = Enumerable.Range(1, 9).Select(_ => new Point()).ToArray();
+  var uniqueTailPositions = new List<Tuple<int,int>>();
+  uniqueTailPositions.Add(tails[0].GetTuple());
+  foreach (var move in moves)
+  {
+    for (var i = 1; i <= move.Count; i++)
+    {
+      head.MoveHead(move.Direction);
+      for (var j = tails.Length - 1; j >= 0; j--)
+      {
+        tails[j].MoveTail(j == (tails.Length - 1) ? head : tails[j + 1]);
+      }
+      if (!uniqueTailPositions.Contains(tails[0].GetTuple()))
+      {
+        uniqueTailPositions.Add(tails[0].GetTuple());
+      }
+    }
+  }
+  Console.WriteLine("Part 2: {0}", uniqueTailPositions.Count);
+}
+
+// Parse the input
 static List<Move> GetMoves(string input)
 {
   var moves = new List<Move>();
@@ -34,6 +60,7 @@ static List<Move> GetMoves(string input)
   return moves;
 }
 
+// Parse a direction
 static Direction ParseDirection(string input)
 {
   switch (input)
@@ -68,7 +95,7 @@ struct Move
   }
 }
 
-struct Point
+class Point
 {
   public Point(int x = 0, int y = 0)
   {
@@ -78,6 +105,11 @@ struct Point
 
   public int X { get; private set; }
   public int Y { get; private set; }
+
+  public Tuple<int, int> GetTuple()
+  {
+    return Tuple.Create(X, Y);
+  }
 
   public void MoveHead(Direction direction)
   {
