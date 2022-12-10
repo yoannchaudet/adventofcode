@@ -12,19 +12,7 @@
       signalStrength += tick * x;
     }
   });
-  foreach (var instruction in ParseInstructions(input))
-  {
-    if (instruction is AddX)
-    {
-      clock.Tick();
-      clock.Tick();
-      x += ((AddX)instruction).X;
-    }
-    else if (instruction is Noop)
-    {
-      clock.Tick();
-    }
-  }
+  Execute(input, clock, ref x);
   Console.WriteLine("Part 1: {0}", signalStrength);
 }
 
@@ -61,19 +49,7 @@
       crt[crtRow][localTick] = '#';
     }
   });
-  foreach (var instruction in ParseInstructions(input))
-  {
-    if (instruction is AddX)
-    {
-      clock.Tick();
-      clock.Tick();
-      x += ((AddX)instruction).X;
-    }
-    else if (instruction is Noop)
-    {
-      clock.Tick();
-    }
-  }
+  Execute(input, clock, ref x);
   Console.WriteLine("Part 2:");
   foreach (var row in crt)
   {
@@ -97,6 +73,24 @@ static IEnumerable<Instruction> ParseInstructions(string input)
     else
     {
       throw new Exception("Unknown instruction: " + line);
+    }
+  }
+}
+
+// Execute instructions from a given input with a given clock and x register
+static void Execute(string input, Clock clock, ref int x)
+{
+  foreach (var instruction in ParseInstructions(input))
+  {
+    if (instruction is AddX)
+    {
+      clock.Tick();
+      clock.Tick();
+      x += ((AddX)instruction).X;
+    }
+    else if (instruction is Noop)
+    {
+      clock.Tick();
     }
   }
 }
