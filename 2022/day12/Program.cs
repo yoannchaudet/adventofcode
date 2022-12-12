@@ -1,15 +1,25 @@
 ﻿var input = "input.txt";
+var map = GetMap(input);
+var target = GetPoints(map).First(x => map[x.Y][x.X] == 'E');
 
 // Part 1
 {
-  var map = GetMap(input);
-
-  // Get shorted path
   var source = GetPoints(map).First(x => map[x.Y][x.X] == 'S');
-  var target = GetPoints(map).First(x => map[x.Y][x.X] == 'E');
-  var (dist, prev) = Djkstra(source, target, map);
+  var (dist, prev) = Djkstra( new Point[] {source}, target, map);
+  var shortestPathLength = GetShortestPathLength(source, target, dist, prev);
+  Console.WriteLine("Part 1: {0}", shortestPathLength);
+}
 
-  // Walk back the shorted path
+// Part 2
+{
+  var sources = GetPoints(map).Where(x => map[x.Y][x.X] == 'a' || map[x.Y][x.X] == 'S');
+  var (dist, prev) = Djkstra( sources.ToArray(), target, map);
+  var min = sources.Select(source => GetShortestPathLength(source, target, dist, prev)).Min();
+  Console.WriteLine("Part 2: {0}", min);
+}
+
+static int GetShortestPathLength(Point source, Point target, Dictionary<Point, int> dist, Dictionary<Point, Point?> prev)
+{
   var s = new List<Point>();
   var u = target;
   if (prev[u] != null || u == source)
@@ -20,11 +30,10 @@
       u = prev[u];
     }
   }
-
-  Console.WriteLine("Part 1: {0}", s.Count() - 1);
+  return s.Count() - 1;
 }
 
-static (Dictionary<Point, int>, Dictionary<Point, Point?>) Djkstra(Point source, Point target, char[][] map)
+static (Dictionary<Point, int>, Dictionary<Point, Point?>) Djkstra(Point[] sources, Point target, char[][] map)
 {
   // Init Dijkstra
   var dist = new Dictionary<Point, int>();
@@ -36,7 +45,8 @@ static (Dictionary<Point, int>, Dictionary<Point, Point?>) Djkstra(Point source,
     prev[vertex] = null;
     q.Add(vertex);
   }
-  dist[source] = 0;
+  foreach (var source in sources)
+    dist[source] = 0;
 
   // Run Dijkstra
   while (q.Count > 0)
@@ -46,7 +56,6 @@ static (Dictionary<Point, int>, Dictionary<Point, Point?>) Djkstra(Point source,
     {
       break;
     }
-
     q.Remove(u);
 
     foreach (var v in GetAccessibleNeighbors(u, map).Where(v => q.Contains(v)))
@@ -140,10 +149,5 @@ class Point
   public override int GetHashCode()
   {
     return X.GetHashCode() ^ Y.GetHashCode();
-  }
-
-  public override string ToString()
-  {
-    return "(y:x)" + Y + ":" + X;
   }
 }
