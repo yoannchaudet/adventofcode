@@ -15,7 +15,7 @@ foreach (var path in paths)
 
 // Part 1
 {
-  var map = new Map(points);
+  var map = new Map(points, false);
   int units = 0;
   map.Print();
   while (OneMoreUnitOfSand(map)) { units++; }
@@ -23,10 +23,20 @@ foreach (var path in paths)
   Console.WriteLine("Part 1: {0}", units);
 }
 
+// Part 2
+{
+  var map = new Map(points, true);
+  int units = 0;
+  map.Print();
+  while (map.Get(0, 500) != 'o') { OneMoreUnitOfSand2(map); units++; }
+  map.Print();
+  Console.WriteLine("Part 2: {0}", units);
+}
+
 // Let one particle of sand fall from the top, return true if it settles
 bool OneMoreUnitOfSand(Map map)
 {
-  // Location of sand
+  // Start location
   var x = 500;
   var y = 0;
 
@@ -52,6 +62,48 @@ bool OneMoreUnitOfSand(Map map)
       if (x > map.MaxX - 1) return false;
       if (y > map.MaxY - 1) return false;
 
+      // Slide left
+      if (map.Get(y + 1, x - 1) == '.')
+      {
+        x--;
+        y++;
+      }
+
+      // Move right
+      else if (map.Get(y + 1, x + 1) == '.')
+      {
+        x++;
+        y++;
+      }
+
+      // Stay here
+      else
+      {
+        map.Set(y, x, 'o');
+        return true;
+      }
+    }
+  }
+}
+
+// Let one particle of sand fall from the top, return true if it settles
+bool OneMoreUnitOfSand2(Map map)
+{
+  // Start location
+  var x = 500;
+  var y = 0;
+
+  while (true)
+  {
+    // Drop down
+    if (map.Get(y + 1, x) == '.')
+    {
+      y++;
+    }
+
+    // Slide on sand/rock
+    else if (map.Get(y + 1, x) == '#' || map.Get(y + 1, x) == 'o')
+    {
       // Slide left
       if (map.Get(y + 1, x - 1) == '.')
       {
@@ -119,9 +171,10 @@ class Map
   public int MaxX { get; private set; }
   public int MaxY { get; private set; }
 
+  public bool InfiniteBottom { get; private set; }
 
   // Init a map with a list of walls
-  public Map(List<Point> points)
+  public Map(List<Point> points, bool infiniteBottom)
   {
     MinX = Int32.MaxValue;
     MinY = Int32.MaxValue;
@@ -131,6 +184,7 @@ class Map
     {
       Set(point.Y, point.X, '#');
     }
+    InfiniteBottom = infiniteBottom;
   }
 
   // Return the char at the given position
@@ -139,7 +193,14 @@ class Map
     if (_map.ContainsKey(y) && _map[y].ContainsKey(x))
       return _map[y][x];
     else
+    {
+      // Add an infinite wall
+      if (InfiniteBottom && y >= MaxY + 2)
+        return '#';
+
+      // Return some air
       return '.';
+    }
   }
 
   // Set the chart at a given position
@@ -156,8 +217,12 @@ class Map
     // Update dimensions
     MinX = Math.Min(MinX, x);
     MaxX = Math.Max(MaxX, x);
-    MinY = Math.Min(MinY, y);
-    MaxY = Math.Max(MaxY, y);
+    if (!InfiniteBottom)
+    {
+      // Don't update the bottom if it's infinite
+      MinY = Math.Min(MinY, y);
+      MaxY = Math.Max(MaxY, y);
+    }
   }
 
   // Print the map
