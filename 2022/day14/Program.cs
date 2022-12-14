@@ -1,7 +1,7 @@
 ﻿var input = "input.txt";
-var paths = GetPoints(input).ToList();
 
 // Collect all points in the completed paths
+var paths = GetPoints(input).ToList();
 var points = new List<Point>();
 foreach (var path in paths)
 {
@@ -13,15 +13,18 @@ foreach (var path in paths)
   }
 }
 
-// Get the map
-var (map, viewBoxA, viewBoxB) = GetMap(points);
-int units = 0;
-while (OneMoreUnitOfSand(map)) { units++; }
-Print(map, viewBoxA, viewBoxB);
-Console.WriteLine("Part 1: {0}", units);
+// Part 1
+{
+  var map = new Map(points);
+  int units = 0;
+  map.Print();
+  while (OneMoreUnitOfSand(map)) { units++; }
+  map.Print();
+  Console.WriteLine("Part 1: {0}", units);
+}
 
 // Let one particle of sand fall from the top, return true if it settles
-bool OneMoreUnitOfSand(char[][] map)
+bool OneMoreUnitOfSand(Map map)
 {
   // Location of sand
   var x = 500;
@@ -29,108 +32,49 @@ bool OneMoreUnitOfSand(char[][] map)
 
   while (true)
   {
-
-    // out of bound
-    if (y >= map.Length - 1)
+    // Out of bound
+    if (y > map.MaxY)
     {
       return false;
     }
 
-    // drop down
-    if (map[y + 1][x] == '.')
+    // Drop down
+    if (map.Get(y + 1, x) == '.')
     {
       y++;
     }
 
-    // slide on sand
-    else if (map[y + 1][x] == '#' || map[y + 1][x] == 'o')
+    // Slide on sand/rock
+    else if (map.Get(y + 1, x) == '#' || map.Get(y + 1, x) == 'o')
     {
-      // out
-      if (x < 1) return false;
-      if (x > map[y].Length - 2) return false;
-      if (y > map.Length - 2) return false;
+      // Out of bound
+      if (x < map.MinX) return false;
+      if (x > map.MaxX - 1) return false;
+      if (y > map.MaxY - 1) return false;
 
-      // slide left
-      if (map[y + 1][x - 1] == '.')
+      // Slide left
+      if (map.Get(y + 1, x - 1) == '.')
       {
         x--;
         y++;
       }
 
-      // move right
-      else if (map[y + 1][x + 1] == '.')
+      // Move right
+      else if (map.Get(y + 1, x + 1) == '.')
       {
         x++;
         y++;
       }
 
-      // stay here
+      // Stay here
       else
       {
-        map[y][x] = 'o';
+        map.Set(y, x, 'o');
         return true;
       }
     }
   }
-
-  return true;
 }
-
-
-// Print the map given a viewbox defined by a and b
-static void Print(char[][] map, Point a, Point b, int margin = 5)
-{
-  for (var y = a.Y - margin; y <= b.Y + margin; y++)
-  {
-    for (var x = a.X - margin; x <= b.X + margin; x++)
-    {
-      if (y > 0 && y < map.Length && x > 0 && x < map[y].Length)
-      {
-        Console.Write(map[y][x]);
-      }
-      else
-      {
-        // extra air
-        Console.Write('.');
-      }
-
-    }
-    Console.WriteLine();
-  }
-}
-
-// Return the map and its viewbox (max y, max x)
-static (char[][], Point, Point) GetMap(List<Point> points)
-{
-  // Init the map
-  var maxX = points.Max(p => p.X);
-  var maxY = points.Max(p => p.Y);
-  var map = new List<char[]>();
-  for (var y = 0; y <= maxY; y++)
-  {
-    var line = new List<char>();
-    for (var x = 0; x <= maxX; x++)
-    {
-      line.Add('.');
-    }
-    map.Add(line.ToArray());
-  }
-
-  // Add the rock points
-  foreach (var point in points)
-  {
-    map[point.Y][point.X] = '#';
-  }
-
-  // Compute the viewbox
-  var vbMinY = points.Select(p => p.Y).Min();
-  var vbMaxY = points.Select(p => p.Y).Max();
-  var vbMinX = points.Select(p => p.X).Min();
-  var vbMaxX = points.Select(p => p.X).Max();
-
-  return (map.ToArray(), new Point() { X = vbMinX, Y = vbMinY }, new Point() { X = vbMaxX, Y = vbMaxY });
-}
-
 
 // Get the points from the input
 static IEnumerable<List<Point>> GetPoints(string input)
@@ -165,4 +109,68 @@ struct Point
 {
   public int X { get; set; }
   public int Y { get; set; }
+}
+
+class Map
+{
+  private Dictionary<int, Dictionary<int, char>> _map;
+  public int MinX { get; private set; }
+  public int MinY { get; private set; }
+  public int MaxX { get; private set; }
+  public int MaxY { get; private set; }
+
+
+  // Init a map with a list of walls
+  public Map(List<Point> points)
+  {
+    MinX = Int32.MaxValue;
+    MinY = Int32.MaxValue;
+
+    _map = new Dictionary<int, Dictionary<int, char>>();
+    foreach (var point in points)
+    {
+      Set(point.Y, point.X, '#');
+    }
+  }
+
+  // Return the char at the given position
+  public char Get(int y, int x)
+  {
+    if (_map.ContainsKey(y) && _map[y].ContainsKey(x))
+      return _map[y][x];
+    else
+      return '.';
+  }
+
+  // Set the chart at a given position
+  public void Set(int y, int x, char c)
+  {
+    // Store new character
+    if (!_map.ContainsKey(y))
+      _map.Add(y, new Dictionary<int, char>());
+    if (!_map[y].ContainsKey(x))
+      _map[y].Add(x, c);
+    else
+      _map[y][x] = c;
+
+    // Update dimensions
+    MinX = Math.Min(MinX, x);
+    MaxX = Math.Max(MaxX, x);
+    MinY = Math.Min(MinY, y);
+    MaxY = Math.Max(MaxY, y);
+  }
+
+  // Print the map
+  public void Print(int margin = 5)
+  {
+    for (var y = MinY - margin; y <= MaxY + margin; y++)
+    {
+      for (var x = MinX - margin; x <= MaxX + margin; x++)
+      {
+        Console.Write(Get(y, x));
+      }
+      Console.WriteLine();
+    }
+    Console.WriteLine();
+  }
 }
