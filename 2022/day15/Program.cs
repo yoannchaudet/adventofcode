@@ -1,24 +1,29 @@
 ﻿using System.Text.RegularExpressions;
+using System.Collections.Concurrent;
 
 var input = "input.txt";
-var rowY = 2000000;
+var sensorBeacons = ParseInput(input);
+var map = new Map(sensorBeacons);
 
 // Part 1
 {
-  var sensorBeacons = ParseInput(input);
-  var map = new Map(sensorBeacons);
+  var rowY = 2000000;
 
   // Find the sensors to consider
   var candidates = sensorBeacons.Where(sb => Math.Abs(sb.Sensor.Y - rowY) <= sb.Distance).ToList();
 
   // Identify the "no beacons" areas
   int noBeacons = 0;
-  foreach (var candidate in candidates) {
-    for (var x = candidate.Sensor.X - candidate.Distance; x <= candidate.Sensor.X + candidate.Distance; x++) {
-      if (map.Get(rowY, x) != Map.AIR) {
+  foreach (var candidate in candidates)
+  {
+    for (var x = candidate.Sensor.X - candidate.Distance; x <= candidate.Sensor.X + candidate.Distance; x++)
+    {
+      if (map.Get(rowY, x) != Map.AIR)
+      {
         continue;
       }
-      if (Point.GetDistance(x, rowY, candidate.Sensor.X, candidate.Sensor.Y) <= candidate.Distance) {
+      if (Point.GetDistance(x, rowY, candidate.Sensor.X, candidate.Sensor.Y) <= candidate.Distance)
+      {
         map.Set(rowY, x, Map.NOTHING);
         noBeacons++;
       }
@@ -26,6 +31,49 @@ var rowY = 2000000;
   }
   Console.WriteLine("Part 1: {0}", noBeacons);
 }
+
+// Part 2
+// Very very ugly and not smart. Walk through the outer diamonds for each sensor and find a matching point.
+// This is slow, even with a bunch of threads helping wit hthe processing.
+// Completes in ~ 6.3 minutes
+{
+  var min = 0;
+  var max = 4000000;
+
+  var tasks = new List<Task>();
+  foreach (var b in sensorBeacons)
+  {
+    tasks.Add(Task.Factory.StartNew(() =>
+    {
+      Console.WriteLine("Start Checking: {0}", b);
+      b.GetOuterDiamond().ToList().ForEach(p =>
+      {
+        if (p.X < min || p.X > max) return;
+        if (p.Y < min || p.Y > max) return;
+
+        var point = p;
+        bool found = true;
+        foreach (var b in sensorBeacons)
+        {
+          if (Point.GetDistance(point, b.Sensor) <= b.Distance)
+          {
+            found = false;
+            break;
+          }
+        }
+        if (found)
+        {
+          Console.WriteLine("Found at: {0}", point);
+          Console.WriteLine("Part 2: {0}", point.X * 4000000L + point.Y);
+          Environment.Exit(0);
+        }
+      });
+      Console.WriteLine("  End Scanning: {0}", b);
+    }));
+  }
+  Task.WaitAll(tasks.ToArray());
+}
+
 
 // Get the sensor/beacon location from the input
 static IEnumerable<SensorBeacon> ParseInput(string input)
@@ -65,6 +113,18 @@ class SensorBeacon
   {
     return string.Format("Sensor: {0}, Beacon: {1}, Distance: {2}", Sensor, Beacon, Distance);
   }
+
+  // Yield all points on the diamond
+  public IEnumerable<Point> GetOuterDiamond()
+  {
+    for (var i = 0; i < Distance + 1; i++)
+    {
+      yield return new Point(Distance + 1 + Sensor.X - i, Sensor.Y + i);
+      yield return new Point(Distance + 1 + Sensor.X - i, Sensor.Y - i);
+      yield return new Point(Sensor.X - Distance + i, Sensor.Y + i + 1);
+      yield return new Point(Sensor.X - 1 - Distance + i, Sensor.Y - i);
+    }
+  }
 }
 
 class Point
@@ -91,6 +151,21 @@ class Point
   public override string ToString()
   {
     return string.Format("({0}, {1})", X, Y);
+  }
+
+  public override bool Equals(object obj)
+  {
+    if (obj == null || GetType() != obj.GetType())
+    {
+      return false;
+    }
+    var p = (Point)obj;
+    return p.X == X && p.Y == Y;
+  }
+
+  public override int GetHashCode()
+  {
+    return X.GetHashCode() ^ Y.GetHashCode();
   }
 }
 
