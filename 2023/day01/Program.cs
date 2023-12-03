@@ -1,4 +1,9 @@
-﻿IEnumerable<int> ParseInput1(string inputFile)
+﻿const string input = "inputs/input.txt";
+Console.WriteLine($"Part 1: {ParseInput1(input).Sum()}");
+Console.WriteLine($"Part 2: {ParseInput2(input).Sum()}");
+return;
+
+IEnumerable<int> ParseInput1(string inputFile)
 {
     return File.ReadLines(inputFile).Select(line =>
     {
@@ -44,7 +49,3 @@ IEnumerable<int> ParseInput2(string inputFile)
         return keys[firstKey.key] * 10 + keys[lastKey.key];
     });
 }
-
-var input = "inputs/input.txt";
-Console.WriteLine($"Part 1: {ParseInput1(input).Sum()}");
-Console.WriteLine($"Part 2: {ParseInput2(input).Sum()}");
