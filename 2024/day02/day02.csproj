@@ -8,10 +8,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <None Update="i_puzzle.txt">
+        <None Update="i_sample.txt">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
-        <None Update="i_sample.txt">
+        <None Update="i_puzzle.txt">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
     </ItemGroup>
