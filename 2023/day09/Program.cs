@@ -27,8 +27,7 @@ void Print(List<List<int>> developedHistory)
 // Develop an history line
 List<List<int>> DevelopHistory(List<int> history)
 {
-    var developedHistory = new List<List<int>>();
-    developedHistory.Add(history);
+    var developedHistory = new List<List<int>> { history };
     var currentHistory = history;
     while (currentHistory.Any(i => i != 0))
     {
