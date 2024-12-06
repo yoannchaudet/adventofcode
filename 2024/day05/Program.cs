@@ -29,12 +29,12 @@ bool IsOrdered(List<int> u)
 static (List<(int, int)>, List<List<int>>) ReadInput(string input)
 {
     var lines = File.ReadAllLines(input);
-    var orders = lines.Where(l => "|".Contains(l)).Select(l =>
+    var orders = lines.Where(l => l.Contains("|")).Select(l =>
     {
         var tuple = l.Split("|");
         return (int.Parse(tuple[0]), int.Parse(tuple[1]));
     }).ToList();
-    var updates = lines.Where(l => ",".Contains(l)).Select(l => l.Split(",").Select(int.Parse).ToList()).ToList();
+    var updates = lines.Where(l => l.Contains(",")).Select(l => l.Split(",").Select(int.Parse).ToList()).ToList();
     return (orders, updates);
 }
 

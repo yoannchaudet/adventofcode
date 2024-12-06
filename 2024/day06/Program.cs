@@ -34,6 +34,10 @@ foreach (var row in map) part1 += row.Count(c => c == 'X');
 PrintMap(map);
 Console.WriteLine($"Part 1 = {part1}");
 
+//
+// Part 2
+// 
+
 
 static (Direction, (int, int)) FindGuard(char[][] map)
 {
