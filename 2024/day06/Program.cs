@@ -7,7 +7,7 @@ var input = "i_puzzle.txt";
 //
 
 // List of explored positions
-List<(int, int)> exploredPositions = new List<(int, int)>();
+var exploredPositions = new List<(int, int)>();
 
 {
     var map = ReadMap(input);
@@ -43,7 +43,7 @@ List<(int, int)> exploredPositions = new List<(int, int)>();
 // Part 2
 // 
 // Try to block all positions that were expored by a guard, one by one, except the guard's starting position.
-int part2 = 0;
+var part2 = 0;
 foreach (var position in exploredPositions)
 {
     var map = ReadMap(input);

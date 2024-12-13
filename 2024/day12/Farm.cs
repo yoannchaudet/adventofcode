@@ -33,7 +33,8 @@ public class Farm
             var start = plots.First();
             var regionPlots = GetRegionPlots(start);
             regionPlots.ForEach(p => plots.Remove(p));
-            var region = new Region(Map[start.Item1][start.Item2], regionPlots, GetPerimeter(regionPlots));
+            var region = new Region(Map[start.Item1][start.Item2], regionPlots, GetPerimeter(regionPlots),
+                GetSides(regionPlots));
             regions.Add(region);
         }
 
@@ -53,6 +54,86 @@ public class Farm
         }
 
         return perimeter;
+    }
+
+    // Get the plots participating in a perimeter (including the orientation)
+    private List<(int, int, Direction)> GetPerimeterPoints(List<(int, int)> regionPlots)
+    {
+        var perimetersSpec = new List<(int, int, Direction)>();
+        foreach (var plot in regionPlots)
+        foreach (var direction in Enum.GetValues<Direction>())
+        {
+            var adjacent = GetAdjacentPlot(plot, direction);
+            if (adjacent == null || !regionPlots.Contains(adjacent.Value))
+                perimetersSpec.Add((plot.Item1, plot.Item2, direction));
+        }
+
+        return perimetersSpec;
+    }
+
+    // Like GetPerimeter but return the number of sides instead
+    private int GetSides(List<(int, int)> regionPlots)
+    {
+        var perimeterPoints = GetPerimeterPoints(regionPlots);
+
+        var sides = 0;
+        while (perimeterPoints.Count > 0)
+        {
+            // Accumulate one side and take away the perimeter point
+            var perimeterPoint = perimeterPoints.First();
+            perimeterPoints.Remove(perimeterPoint);
+            sides++;
+
+            // Get direction
+            var direction = perimeterPoint.Item3;
+            if (direction == Direction.Top || direction == Direction.Bottom)
+            {
+                // Backward
+                for (var x = perimeterPoint.Item2 - 1; x >= 0; x--)
+                {
+                    var otherSide = (perimeterPoint.Item1, x, perimeterPoint.Item3);
+                    if (perimeterPoints.Contains(otherSide))
+                        perimeterPoints.Remove(otherSide);
+                    else
+                        break;
+                }
+
+                // Forward
+                for (var x = perimeterPoint.Item2 + 1; x <= Map[perimeterPoint.Item1].Length - 1; x++)
+                {
+                    var otherSide = (perimeterPoint.Item1, x, perimeterPoint.Item3);
+                    if (perimeterPoints.Contains(otherSide))
+                        perimeterPoints.Remove(otherSide);
+                    else
+                        break;
+                }
+            }
+
+            if (direction == Direction.Left || direction == Direction.Right)
+            {
+                // Backward
+                for (var y = perimeterPoint.Item1 - 1; y >= 0; y--)
+                {
+                    var otherSide = (y, perimeterPoint.Item2, perimeterPoint.Item3);
+                    if (perimeterPoints.Contains(otherSide))
+                        perimeterPoints.Remove(otherSide);
+                    else
+                        break;
+                }
+
+                // Forward
+                for (var y = perimeterPoint.Item1 + 1; y <= Map.Length - 1; y++)
+                {
+                    var otherSide = (y, perimeterPoint.Item2, perimeterPoint.Item3);
+                    if (perimeterPoints.Contains(otherSide))
+                        perimeterPoints.Remove(otherSide);
+                    else
+                        break;
+                }
+            }
+        }
+
+        return sides;
     }
 
     // Find all plots in a region for a given starting plot
@@ -93,7 +174,7 @@ public class Farm
         }
     }
 
-    // Return the adgacent plot in the given direction
+    // Return the adjacent plot in the given direction
     private (int, int)? GetAdjacentPlot((int, int) reference, Direction direction)
     {
         var (y, x) = reference;
@@ -126,11 +207,12 @@ public class Farm
 
     public class Region
     {
-        public Region(char plant, List<( int, int)> plots, int perimeter)
+        public Region(char plant, List<( int, int)> plots, int perimeter, int sides)
         {
             Plant = plant;
             Plots = plots;
             Perimeter = perimeter;
+            Sides = sides;
         }
 
         public char Plant { get; }
@@ -139,6 +221,8 @@ public class Farm
         private List<(int, int)> Plots { get; }
 
         public int Area => Plots.Count;
+
+        public int Sides { get; }
 
         public int Perimeter { get; init; }
     }

@@ -18,7 +18,7 @@ public class BlockOrganizer
         }
     }
 
-    private List<long> Blocks { get; init; }
+    private List<long> Blocks { get; }
 
     public void CompactPart1()
     {

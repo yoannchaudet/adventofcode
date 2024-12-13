@@ -2,7 +2,7 @@ namespace day11;
 
 public class StoneAnalyzer
 {
-    private Dictionary<(long, int), long> _cache = new();
+    private readonly Dictionary<(long, int), long> _cache = new();
 
     public StoneAnalyzer(string input)
     {

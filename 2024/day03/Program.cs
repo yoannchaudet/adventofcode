@@ -14,7 +14,6 @@ var canMul = true;
 var part2 = 0;
 foreach (var match in part2Regex.Matches(inputText))
     if (match is Match m)
-    {
         switch (m.Groups[0].Value)
         {
             case "do()":
@@ -31,5 +30,5 @@ foreach (var match in part2Regex.Matches(inputText))
                 break;
             }
         }
-    }
+
 Console.WriteLine($"Part 2 = {part2}");

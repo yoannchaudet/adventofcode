@@ -1,18 +1,15 @@
 namespace day06;
 
 // Be dump, hardcode a limit 🙈
-public class LoopDetector()
+public class LoopDetector
 {
-    private int _turns = 0;
+    private int _turns;
 
     // Tell if a new turn is a loop
     public bool IsLoop((int, int) newTurn)
     {
         _turns++;
-        if (_turns > 10000)
-        {
-            return true;
-        }
+        if (_turns > 10000) return true;
         return false;
     }
 }

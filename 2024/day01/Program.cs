@@ -7,6 +7,7 @@ foreach (var line in File.ReadLines(input))
     l1.Add(int.Parse(ids[0]));
     l2.Add(int.Parse(ids[1]));
 }
+
 l1.Sort();
 l2.Sort();
 
