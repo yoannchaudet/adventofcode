@@ -51,7 +51,7 @@ public class Planner
             RobotsPerPosition[y][x] = robots;
         }
     }
-    
+
     public int GetSafetyFactor()
     {
         // 0 1
