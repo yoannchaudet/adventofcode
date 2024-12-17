@@ -10,9 +10,9 @@ public class Maze
         West
     }
 
-    private readonly char[][] _map;
-
     private readonly (int, int, Direction) _currentPosition;
+
+    private readonly char[][] _map;
 
     public Maze(string input)
     {
@@ -21,13 +21,14 @@ public class Maze
         _currentPosition = GetStartPosition();
     }
 
-    public int ShortestPath()
+    // Return the shortest path's score  and the number of tiles
+    public (int, int) GetBestPath()
     {
         // Dijkstra's algorithm (no priority queue)
         // https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
 
         var dist = new Dictionary<(int, int, Direction), int>();
-        var prev = new Dictionary<(int, int, Direction), (int, int, Direction)?>();
+        var prev = new Dictionary<(int, int, Direction), List<(int, int, Direction)>?>();
         var q = new HashSet<(int, int, Direction)>();
         foreach (var v in GetVertices())
         {
@@ -40,11 +41,8 @@ public class Maze
 
         while (q.Count > 0)
         {
-            if (q.Count % 1000 == 0)
-            {
-                Console.WriteLine("Remaining nodes: " + q.Count);
-            }
-            
+            if (q.Count % 1000 == 0) Console.WriteLine("Remaining nodes: " + q.Count);
+
             var u = q.OrderBy(v => dist[v]).First();
             q.Remove(u);
 
@@ -57,13 +55,69 @@ public class Maze
                 if (alt < dist[v])
                 {
                     dist[v] = alt;
-                    prev[v] = u;
+                    prev[v] = new List<(int, int, Direction)>();
+                    prev[v]!.Add(u);
+                }
+                else if (alt == dist[v])
+                {
+                    prev[v]!.Add(u);
                 }
             }
         }
 
-        return GetEndPosition().Min(position => dist[position]);
+        return BacktrackPaths(dist, prev);
     }
+
+    private (int, int) BacktrackPaths(Dictionary<(int, int, Direction), int> dist,
+        Dictionary<(int, int, Direction), List<(int, int, Direction)>?> prev)
+    {
+        // List of potential targets
+        var targets = new List<(int, int, Direction)>();
+        var distance = int.MaxValue;
+        foreach (var target in GetEndPosition())
+            if (dist[target] < distance)
+            {
+                targets.Add(target);
+                distance = dist[target];
+            }
+            else if (dist[target] == distance)
+            {
+                targets.Add(target);
+            }
+
+        var allPaths = new List<List<(int, int, Direction)>>();
+        foreach (var target in targets)
+        {
+            var path = new List<(int, int, Direction)> { target };
+            allPaths.AddRange(BuildPath(target, path, prev));
+        }
+
+        var tiles = new HashSet<(int, int)>();
+        foreach (var path in allPaths)
+        foreach (var (y, x, _) in path)
+            tiles.Add((y, x));
+        return (distance, tiles.Count);
+    }
+
+    private IEnumerable<List<(int, int, Direction)>> BuildPath((int, int, Direction) current,
+        List<(int, int, Direction)> path,
+        Dictionary<(int, int, Direction), List<(int, int, Direction)>?> prev)
+    {
+        // Exit
+        if (current == GetStartPosition())
+            yield return path;
+
+        var predecessors = prev[current];
+        if (predecessors != null)
+            foreach (var predecessor in predecessors)
+            {
+                var newPath = new List<(int, int, Direction)>(path);
+                newPath.Add(predecessor);
+                foreach (var possiblePath in BuildPath(predecessor, newPath, prev))
+                    yield return possiblePath;
+            }
+    }
+
 
     private (int, int, Direction) GetStartPosition()
     {
@@ -80,10 +134,8 @@ public class Maze
         for (var y = 0; y < _map.Length; y++)
         for (var x = 0; x < _map[y].Length; x++)
             if (_map[y][x] == 'E')
-            {
                 foreach (var d in Enum.GetValues<Direction>())
                     yield return (y, x, d);
-            }
     }
 
     private IEnumerable<(int, int, Direction)> GetVertices()
